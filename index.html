@@ -35,7 +35,7 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 <div>降り注ぐうんちをよけて、できるだけ長く生き残れ！</div>
 <div class="box"><small>HIGH SCORE</small><strong id="high">0.00秒</strong></div>
 <button id="startBtn">GAME START</button>
-<div id="sound" class="sound">🔊 BGM ON</div>
+<div id="sound" class="sound">🎵 ホームBGM ON</div>
 <div class="hint">画面をタップしたまま左右にスライドして移動</div>
 </div>
 
@@ -49,7 +49,7 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 <h1 class="title">GAME OVER</h1>
 <div class="box"><small>SURVIVAL TIME</small><strong id="final">0.00秒</strong><div id="record"></div></div>
 <button id="retry">RETRY</button>
-<div id="sound2" class="sound">🔊 BGM ON</div>
+<div id="sound2" class="sound">🎵 ホームBGM ON</div>
 </div>
 
 <script>
@@ -63,7 +63,7 @@ high.textContent=highscore.toFixed(2)+'秒';
 
 let playing=false,last=0,startTime=0,t=0,HP=100;
 let poop=[],items=[],target=W/2,down=false,spawn=0,itemSpawn=2;
-let inv=0,slow=0,fast=0,audio=null,music=null,bgm=true;
+let inv=0,slow=0,fast=0,audio=null,music=null,homeMusic=null,bgm=true;
 const player={x:W/2,y:0,w:34,h:62};
 const ground=()=>H-58;
 function reset(){player.x=W/2;player.y=ground()-player.h;target=player.x}
@@ -82,6 +82,16 @@ function audioStart(){
  let n=0,notes=[262,330,392,330,294,349,440,349];
  music=setInterval(()=>{if(playing)tone(notes[n++%notes.length],.1,'triangle',.025)},250);
 }
+function homeBgmStart(){
+ if(!bgm)return;
+ if(!audio)audio=new (window.AudioContext||window.webkitAudioContext)();
+ if(audio.state==='suspended')audio.resume();
+ if(homeMusic)return;
+ let n=0,notes=[392,494,587,494,440,523,659,523];
+ homeMusic=setInterval(()=>{
+   if(!playing) tone(notes[n++%notes.length],.32,'sine',.018);
+ },520);
+}
 function sfx(kind){
  const m={hit:90,gold:65,green:150,heart:660,plunger:180,toilet:110,slipper:520,over:80};
  if(!audio)audioStart(); if(!audio)return;tone(m[kind]||300,.15,kind==='hit'?'sawtooth':'sine',.07);
@@ -89,18 +99,20 @@ function sfx(kind){
 }
 
 function startGame(){
+ if(homeMusic){clearInterval(homeMusic);homeMusic=null}
  start.classList.add('hidden');over.classList.add('hidden');hud.classList.remove('hidden');
  playing=true;HP=100;t=0;poop=[];items=[];inv=slow=fast=0;spawn=0;itemSpawn=1.5;
  reset();startTime=performance.now();last=startTime;status.textContent='';
  audioStart();requestAnimationFrame(loop);
 }
 startBtn.onclick=startGame;retry.onclick=startGame;
+document.addEventListener('pointerdown',()=>{if(!playing)homeBgmStart()},{once:false});
 function toggle(){bgm=!bgm;document.querySelectorAll('.sound').forEach(e=>e.textContent=bgm?'🔊 BGM ON':'🔇 BGM OFF');if(bgm&&playing)audioStart()}
 sound.onclick=toggle;sound2.onclick=toggle;
 
 function spawnPoop(){
  let r=Math.random(),type=r<.13?'gold':r<.29?'green':'pink';
- poop.push({x:25+Math.random()*(W-50),y:-30,s:type==='gold'?25:22,type,vy:145+Math.random()*75+t*3,rot:Math.random()*6.2});
+ poop.push({x:25+Math.random()*(W-50),y:-30,s:type==='gold'?31:28,type,vy:145+Math.random()*75+t*3,rot:Math.random()*6.2});
 }
 function spawnItem(){
  let r=Math.random(),type=r<.28?'heart':r<.52?'plunger':r<.75?'toilet':'slipper';
@@ -142,8 +154,36 @@ function update(dt){
 }
 function cloud(cx,cy,s){x.fillStyle='#fff';x.beginPath();x.arc(cx,cy,24*s,0,7);x.arc(cx+28*s,cy-12*s,30*s,0,7);x.arc(cx+58*s,cy,23*s,0,7);x.rect(cx-2*s,cy,cx+62*s,cy+25*s);x.fill()}
 function drawPoop(p){
- x.save();x.translate(p.x,p.y);x.rotate(p.rot);x.fillStyle=p.type==='gold'?'#ffd22e':p.type==='green'?'#39b94a':'#f38ab5';x.strokeStyle='#633';x.lineWidth=2;
- x.beginPath();let s=p.s;x.moveTo(-s*.55,s*.35);x.bezierCurveTo(-s*.75,-s*.05,-s*.48,-s*.55,-s*.12,-s*.45);x.bezierCurveTo(-s*.2,-s*.95,s*.48,-s*.9,s*.34,-s*.42);x.bezierCurveTo(s*.85,-s*.38,s*.75,.1,s*.52,.38);x.closePath();x.fill();x.stroke();x.restore();
+ x.save();x.translate(p.x,p.y);x.rotate(p.rot);
+ const s=p.s*1.18;
+ const col=p.type==='gold'?'#ffd22e':p.type==='green'?'#39b94a':'#f38ab5';
+ x.strokeStyle='#5b3420';x.lineWidth=Math.max(2,s*.08);x.lineJoin='round';
+ // Three unmistakable stacked tiers.
+ x.fillStyle=col;
+ x.beginPath();
+ x.moveTo(-s*.78,s*.42);
+ x.bezierCurveTo(-s*.92,s*.05,-s*.72,-s*.12,-s*.48,-s*.10);
+ x.bezierCurveTo(-s*.55,-s*.38,-s*.28,-s*.50,0,-s*.42);
+ x.bezierCurveTo(s*.28,-s*.50,s*.55,-s*.38,s*.48,-s*.10);
+ x.bezierCurveTo(s*.72,-s*.12,s*.92,s*.05,s*.78,s*.42);
+ x.bezierCurveTo(s*.45,s*.62,-s*.45,s*.62,-s*.78,s*.42);x.closePath();x.fill();x.stroke();
+ x.beginPath();
+ x.moveTo(-s*.58,-s*.10);
+ x.bezierCurveTo(-s*.72,-s*.30,-s*.55,-s*.52,-s*.28,-s*.48);
+ x.bezierCurveTo(-s*.30,-s*.70,-s*.12,-s*.82,0,-s*.76);
+ x.bezierCurveTo(s*.12,-s*.82,s*.30,-s*.70,s*.28,-s*.48);
+ x.bezierCurveTo(s*.55,-s*.52,s*.72,-s*.30,s*.58,-s*.10);
+ x.bezierCurveTo(s*.35,.03,-s*.35,.03,-s*.58,-s*.10);x.closePath();x.fill();x.stroke();
+ x.beginPath();
+ x.moveTo(-s*.30,-s*.48);
+ x.bezierCurveTo(-s*.38,-s*.64,-s*.25,-s*.82,-s*.08,-s*.80);
+ x.bezierCurveTo(-s*.16,-s*.98,s*.10,-s*1.05,s*.14,-s*.84);
+ x.bezierCurveTo(s*.34,-s*.78,s*.40,-s*.58,s*.30,-s*.48);
+ x.bezierCurveTo(s*.18,-s*.34,-s*.18,-s*.34,-s*.30,-s*.48);x.closePath();x.fill();x.stroke();
+ // Cute highlight / face, keeping variants readable.
+ x.fillStyle='rgba(255,255,255,.45)';
+ x.beginPath();x.ellipse(-s*.42,s*.17,s*.12,s*.07,-.3,0,7);x.fill();
+ x.restore();
 }
 function draw(){
  let g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#67d4ff');g.addColorStop(.72,'#c5f1ff');g.addColorStop(.72,'#8ed65e');g.addColorStop(1,'#62b94a');x.fillStyle=g;x.fillRect(0,0,W,H);
@@ -158,7 +198,7 @@ function draw(){
  if(t<inv){x.strokeStyle='#39f';x.lineWidth=3;x.beginPath();x.arc(0,35,30+Math.sin(t*8)*3,0,7);x.stroke()}x.restore();
 }
 function loop(now){if(!playing)return;let dt=Math.min(.033,(now-last)/1000);last=now;update(dt);draw();if(playing)requestAnimationFrame(loop)}
-function end(){playing=false;hud.classList.add('hidden');over.classList.remove('hidden');final.textContent=t.toFixed(2)+'秒';
+function end(){playing=false;hud.classList.add('hidden');over.classList.remove('hidden');homeBgmStart();final.textContent=t.toFixed(2)+'秒';
  if(t>highscore){highscore=t;localStorage.setItem(KEY,highscore);record.textContent='🏆 NEW HIGH SCORE!'}else record.textContent='HIGH SCORE '+highscore.toFixed(2)+'秒';sfx('over')}
 c.addEventListener('pointerdown',e=>{if(playing){down=true;target=e.clientX;c.setPointerCapture?.(e.pointerId)}})
 c.addEventListener('pointermove',e=>{if(down)target=e.clientX})
