@@ -17,6 +17,17 @@ canvas{display:block;width:100%;height:100%}
 .box small{display:block;font-weight:900}.box strong{font-size:34px}
 button{border:3px solid #222;border-radius:16px;background:#ffd83d;padding:14px 30px;font-size:21px;font-weight:900;box-shadow:0 5px #222}
 button:active{transform:translateY(4px);box-shadow:0 1px #222}
+.helpBtn{margin-top:12px;background:#fff;font-size:16px;padding:10px 20px;box-shadow:0 3px #222}
+.ranking{min-width:210px;padding:10px 24px;margin-bottom:16px}
+.scores{font-size:22px;font-weight:900;line-height:1.5}
+.helpPanel{width:min(92vw,560px);max-height:90vh;overflow:auto;background:#fffdf4;border:4px solid #222;border-radius:22px;padding:18px;box-shadow:0 8px #222;color:#222}
+.helpPanel h2{margin:0 0 8px}
+.helpIntro{font-weight:700;line-height:1.5}
+.helpGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0 16px}
+.helpGrid div{background:#fff;border:2px solid #bbb;border-radius:14px;padding:8px;display:grid;grid-template-columns:34px 1fr;column-gap:6px;text-align:left;align-items:center}
+.helpGrid span{grid-row:1/3;font-size:28px;text-align:center}
+.helpGrid b{font-size:14px}.helpGrid small{font-size:11px;color:#555}
+
 .sound{margin-top:16px;background:#fff;color:#222;border:2px solid #222;border-radius:12px;padding:8px 14px;font-weight:800}
 .hidden{display:none!important}
 #hud{position:fixed;top:8px;left:8px;right:8px;z-index:4;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
@@ -33,8 +44,9 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 <div id="start" class="screen">
 <h1 class="title">棒人間💩<br>うんち大避けゲーム</h1>
 <div>降り注ぐうんちをよけて、できるだけ長く生き残れ！</div>
-<div class="box"><small>HIGH SCORE</small><strong id="high">0.00秒</strong></div>
+<div class="box ranking"><small>BEST 3</small><div id="scoreList" class="scores"></div></div>
 <button id="startBtn">GAME START</button>
+<button id="helpBtn" class="helpBtn">📖 遊び方・アイテム説明</button>
 <div id="sound" class="sound">🎵 ホームBGM ON</div>
 <div class="hint">画面をタップしたまま左右にスライドして移動</div>
 </div>
@@ -44,6 +56,23 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 <div class="hudbox">HP <span id="hp">100</span><div id="hpbar"><div id="hpfill"></div></div></div>
 </div>
 <div id="status"></div>
+
+<div id="help" class="screen hidden">
+<div class="helpPanel">
+<h2>📖 遊び方・アイテム説明</h2>
+<p class="helpIntro">画面をタップしたまま左右にスライドして棒人間を動かそう！<br>HPが0になるまで、できるだけ長く生き残れ！</p>
+<div class="helpGrid">
+<div><span>🩷</span><b>ピンクうんち</b><small>当たると HP -8</small></div>
+<div><span>🟡</span><b>金のうんち</b><small>当たると HP -20</small></div>
+<div><span>🟢</span><b>緑のうんち</b><small>3秒間スピードダウン</small></div>
+<div><span>🟣</span><b>紫うんち</b><small>5秒間、うんちが1.5倍速</small></div>
+<div><span>❤️</span><b>ハート</b><small>HP +10</small></div>
+<div><span>🪠</span><b>スッポン</b><small>10秒間 無敵</small></div>
+<div><span>🚽</span><b>便器</b><small>画面のうんちを全消去</small></div>
+<div><span>🩴</span><b>スリッパ</b><small>5秒間 スピードアップ</small></div>
+</div>
+<button id="closeHelp">閉じる</button>
+</div></div>
 
 <div id="over" class="screen hidden">
 <h1 class="title">GAME OVER</h1>
@@ -63,7 +92,7 @@ high.textContent=highscore.toFixed(2)+'秒';
 
 let playing=false,last=0,startTime=0,t=0,HP=100;
 let poop=[],items=[],target=W/2,down=false,spawn=0,itemSpawn=2;
-let inv=0,slow=0,fast=0,audio=null,music=null,homeMusic=null,bgm=true;
+let inv=0,slow=0,fast=0,purpleBoost=0,audio=null,music=null,homeMusic=null,bgm=true;
 const player={x:W/2,y:0,w:34,h:62};
 const ground=()=>H-58;
 function reset(){player.x=W/2;player.y=ground()-player.h;target=player.x}
@@ -93,7 +122,7 @@ function homeBgmStart(){
  },520);
 }
 function sfx(kind){
- const m={hit:90,gold:65,green:150,heart:660,plunger:180,toilet:110,slipper:520,over:80};
+ const m={hit:90,gold:65,green:150,purple:360,heart:660,plunger:180,toilet:110,slipper:520,over:80};
  if(!audio)audioStart(); if(!audio)return;tone(m[kind]||300,.15,kind==='hit'?'sawtooth':'sine',.07);
  if(kind==='heart'||kind==='slipper')setTimeout(()=>tone(m[kind]*1.5,.12,'sine',.05),70);
 }
@@ -101,18 +130,18 @@ function sfx(kind){
 function startGame(){
  if(homeMusic){clearInterval(homeMusic);homeMusic=null}
  start.classList.add('hidden');over.classList.add('hidden');hud.classList.remove('hidden');
- playing=true;HP=100;t=0;poop=[];items=[];inv=slow=fast=0;spawn=0;itemSpawn=1.5;
+ playing=true;HP=100;t=0;poop=[];items=[];inv=slow=fast=purpleBoost=0;spawn=0;itemSpawn=1.5;
  reset();startTime=performance.now();last=startTime;status.textContent='';
  audioStart();requestAnimationFrame(loop);
 }
-startBtn.onclick=startGame;retry.onclick=startGame;
+startBtn.onclick=startGame;retry.onclick=startGame;helpBtn.onclick=()=>help.classList.remove('hidden');closeHelp.onclick=()=>help.classList.add('hidden');
 document.addEventListener('pointerdown',()=>{if(!playing)homeBgmStart()},{once:false});
 function toggle(){bgm=!bgm;document.querySelectorAll('.sound').forEach(e=>e.textContent=bgm?'🔊 BGM ON':'🔇 BGM OFF');if(bgm&&playing)audioStart()}
 sound.onclick=toggle;sound2.onclick=toggle;
 
 function spawnPoop(){
- let r=Math.random(),type=r<.13?'gold':r<.29?'green':'pink';
- poop.push({x:25+Math.random()*(W-50),y:-30,s:type==='gold'?31:28,type,vy:145+Math.random()*75+t*3,rot:Math.random()*6.2});
+ let r=Math.random(),type=r<.12?'gold':r<.25?'green':r<.36?'purple':'pink';
+ poop.push({x:30+Math.random()*(W-60),y:-34,s:type==='gold'?34:31,type,vy:145+Math.random()*75+t*3,rot:Math.random()*6.2});
 }
 function spawnItem(){
  let r=Math.random(),type=r<.28?'heart':r<.52?'plunger':r<.75?'toilet':'slipper';
@@ -128,12 +157,25 @@ function update(dt){
  let dx=target-player.x;player.x+=Math.sign(dx)*Math.min(Math.abs(dx),sp*dt);player.x=Math.max(17,Math.min(W-17,player.x));
  spawn-=dt;
  if(spawn<=0){spawnPoop();if(t>25&&Math.random()<.22)spawnPoop();spawn=Math.max(.22,1-t*.008)*(.65+Math.random()*.45)}
- itemSpawn-=dt;if(itemSpawn<=0){spawnItem();itemSpawn=4.5+Math.random()*5}
+ itemSpawn-=dt;
+ if(itemSpawn<=0){
+   spawnItem();
+   const itemInterval=Math.max(1.8,5.5-t*.025);
+   itemSpawn=itemInterval+Math.random()*2.5;
+ }
 
  for(let i=poop.length-1;i>=0;i--){
-  let p=poop[i];p.y+=p.vy*dt;p.rot+=dt*2;
+  let p=poop[i];p.y+=p.vy*(t<purpleBoost?1.5:1)*dt;p.rot+=dt*2;
   if(hit(p)){
-   if(t>=inv){let dmg=p.type==='gold'?20:8;HP=Math.max(0,HP-dmg);sfx(p.type);if(p.type==='green')slow=Math.max(slow,t+3);status.textContent=p.type==='green'?'🟢 3秒間スピードダウン！':'💥 HP -'+dmg}
+   if(p.type==='purple'){
+     if(t>=inv){purpleBoost=Math.max(purpleBoost,t+5);status.textContent='🟣 5秒間、うんちが1.5倍速！';sfx('purple')}
+     poop.splice(i,1);continue
+   }
+   if(t>=inv){
+     let dmg=p.type==='gold'?20:8;HP=Math.max(0,HP-dmg);sfx(p.type);
+     if(p.type==='green')slow=Math.max(slow,t+3);
+     status.textContent=p.type==='green'?'🟢 3秒間スピードダウン！':'💥 HP -'+dmg
+   }
    poop.splice(i,1);continue
   }
   if(p.y>H+50)poop.splice(i,1);
@@ -152,11 +194,18 @@ function update(dt){
  time.textContent=t.toFixed(2);hp.textContent=HP;hpfill.style.width=HP+'%';
  if(HP<=0)end();
 }
-function cloud(cx,cy,s){x.fillStyle='#fff';x.beginPath();x.arc(cx,cy,24*s,0,7);x.arc(cx+28*s,cy-12*s,30*s,0,7);x.arc(cx+58*s,cy,23*s,0,7);x.rect(cx-2*s,cy,cx+62*s,cy+25*s);x.fill()}
+function cloud(cx,cy,s){
+ x.fillStyle='#fff';x.beginPath();
+ x.arc(cx-30*s,cy+5*s,22*s,0,Math.PI*2);
+ x.arc(cx,cy-10*s,31*s,0,Math.PI*2);
+ x.arc(cx+31*s,cy+4*s,23*s,0,Math.PI*2);
+ x.roundRect(cx-48*s,cy+4*s,96*s,27*s,13*s);
+ x.fill();
+}
 function drawPoop(p){
  x.save();x.translate(p.x,p.y);x.rotate(p.rot);
  const s=p.s*1.18;
- const col=p.type==='gold'?'#ffd22e':p.type==='green'?'#39b94a':'#f38ab5';
+ const col=p.type==='gold'?'#ffd22e':p.type==='green'?'#39b94a':p.type==='purple'?'#a96be8':'#f38ab5';
  x.strokeStyle='#5b3420';x.lineWidth=Math.max(2,s*.08);x.lineJoin='round';
  // Three unmistakable stacked tiers.
  x.fillStyle=col;
@@ -190,7 +239,7 @@ function draw(){
  cloud(W*.1,95,1);cloud(W*.72,145,.8);cloud(W*.42,50,.55);
  x.fillStyle='#65bb4b';x.fillRect(0,ground(),W,H-ground());
  poop.forEach(drawPoop);
- items.forEach(a=>{x.font='28px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText({heart:'❤️',plunger:'🪠',toilet:'🚽',slipper:'🩴'}[a.type],a.x,a.y)});
+ items.forEach(a=>{x.font='36px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText({heart:'❤️',plunger:'🪠',toilet:'🚽',slipper:'🩴'}[a.type],a.x,a.y)});
  x.save();x.translate(player.x,player.y);
  if(t<inv)x.globalAlpha=.35+Math.abs(Math.sin(t*12))*.65;
  x.strokeStyle='#222';x.fillStyle='#222';x.lineWidth=5;x.lineCap='round';x.beginPath();x.arc(0,10,11,0,7);x.fill();
