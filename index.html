@@ -86,9 +86,27 @@ const c=document.getElementById('game'),x=c.getContext('2d');
 let W,H,D=1;
 function resize(){W=innerWidth;H=innerHeight;D=Math.min(devicePixelRatio||1,2);c.width=W*D;c.height=H*D;x.setTransform(D,0,0,D,0,0)}resize();addEventListener('resize',resize);
 
-const KEY='stickman_poop_highscore';
-let highscore=+localStorage.getItem(KEY)||0;
-high.textContent=highscore.toFixed(2)+'秒';
+const $=id=>document.getElementById(id);
+const start=$('start'), over=$('over'), hud=$('hud'), status=$('status');
+const startBtn=$('startBtn'), retry=$('retry'), sound=$('sound'), sound2=$('sound2');
+const help=$('help'), helpBtn=$('helpBtn'), closeHelp=$('closeHelp');
+const time=$('time'), hp=$('hp'), hpfill=$('hpfill'), final=$('final'), record=$('record');
+const KEY='stickman_poop_scores_v2';
+let scores=JSON.parse(localStorage.getItem(KEY)||'[]');
+if(!Array.isArray(scores)) scores=[];
+scores=scores.map(Number).filter(Number.isFinite).sort((a,b)=>b-a).slice(0,3);
+function saveScore(v){
+ scores.push(v);
+ scores=scores.filter(Number.isFinite).sort((a,b)=>b-a).slice(0,3);
+ localStorage.setItem(KEY,JSON.stringify(scores));
+}
+function renderScores(){
+ const list=$('scoreList');
+ if(list) list.innerHTML=scores.length
+  ? scores.map((v,i)=>`<div>${['🥇','🥈','🥉'][i]} ${v.toFixed(2)}秒</div>`).join('')
+  : '<div>まだ記録がありません</div>';
+}
+renderScores();
 
 let playing=false,last=0,startTime=0,t=0,HP=100;
 let poop=[],items=[],target=W/2,down=false,spawn=0,itemSpawn=2;
@@ -134,7 +152,10 @@ function startGame(){
  reset();startTime=performance.now();last=startTime;status.textContent='';
  audioStart();requestAnimationFrame(loop);
 }
-startBtn.onclick=startGame;retry.onclick=startGame;helpBtn.onclick=()=>help.classList.remove('hidden');closeHelp.onclick=()=>help.classList.add('hidden');
+startBtn.addEventListener('click',startGame);
+retry.addEventListener('click',startGame);
+helpBtn.addEventListener('click',()=>help.classList.remove('hidden'));
+closeHelp.addEventListener('click',()=>help.classList.add('hidden'));
 document.addEventListener('pointerdown',()=>{if(!playing)homeBgmStart()},{once:false});
 function toggle(){bgm=!bgm;document.querySelectorAll('.sound').forEach(e=>e.textContent=bgm?'🔊 BGM ON':'🔇 BGM OFF');if(bgm&&playing)audioStart()}
 sound.onclick=toggle;sound2.onclick=toggle;
