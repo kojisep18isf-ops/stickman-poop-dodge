@@ -51,7 +51,7 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 <button id="startBtn">GAME START</button>
 <button id="helpBtn" class="helpBtn">📖 遊び方・アイテム説明</button>
 <div id="sound" class="sound">🎵 ホームBGM ON</div>
-<div class="hint">ドラッグで左右移動　／　うんち銃を持ったら「うんちをタップ」で発射</div>
+<div class="hint">指で完全にドラッグしている間だけ左右移動　／　うんち銃を持ったら「うんちをタップ」で発射</div>
 </div>
 
 <div id="hud" class="hidden">
@@ -64,7 +64,7 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 <div id="help" class="screen hidden">
 <div class="helpPanel">
 <h2>📖 遊び方・アイテム説明</h2>
-<p class="helpIntro">普段は画面を指でドラッグして棒人間を左右に移動。<br>「うんち銃」を取ったら、落ちてくるうんちをタップして撃ち落とそう！</p>
+<p class="helpIntro">普段は画面を指で完全にドラッグしている間だけ、棒人間を左右に移動。<br>「うんち銃」を取ったら、落ちてくるうんちをタップして撃ち落とそう！</p>
 <div class="helpGrid">
 <div><span>🩷</span><b>ピンクうんち</b><small>当たると HP -8</small></div>
 <div><span>🟡</span><b>金のうんち</b><small>当たると HP -20</small></div>
@@ -105,7 +105,7 @@ const gunhud=$('gunhud'),ammoEl=$('ammo');
 let W=innerWidth,H=innerHeight,D=1;
 let playing=false,last=0,startTime=0,t=0,HP=100;
 let poop=[],items=[],bullets=[];
-let dragging=false,dragStartX=0,dragMoved=false;
+let dragging=false,pointerActive=false,dragStartX=0,dragStartPlayerX=0;
 let spawn=0,itemSpawn=2;
 let inv=0,slow=0,fast=0,purpleBoost=0,stun=0;
 let poopGun=false,gunAmmo=0,gunFlash=0;
@@ -146,7 +146,7 @@ renderScores();
 
 function reset(){
   player.x=W/2;player.y=ground()-player.h;
-  dragging=false;dragMoved=false;bullets=[];
+  dragging=false;pointerActive=false;bullets=[];
 }
 function tone(f,d=.12,type='sine',v=.04){
   if(!bgm||!audio)return;
@@ -350,9 +350,15 @@ function drawPoop(p){
 function drawItem(a){
   x.save();x.translate(a.x,a.y);x.textAlign='center';x.textBaseline='middle';
   const big=['bigplunger','bigheart'].includes(a.type);
-  x.font=(big?'46':'39')+'px sans-serif';
-  const map={heart:'❤️',broken:'💔',plunger:'🪠',bigplunger:'🪠',toilet:'🚽',slipper:'🩴',bigheart:'💗',fire:'🔥💩',gun:'🔫'};
-  x.fillText(map[a.type],0,0);
+  if(a.type==='fire'){
+    // 炎を後ろ、うんちを手前に重ねて描く
+    x.font='46px sans-serif';x.fillText('🔥',0,-12);
+    x.font='34px sans-serif';x.fillText('💩',0,10);
+  }else{
+    x.font=(big?'46':'39')+'px sans-serif';
+    const map={heart:'❤️',broken:'💔',plunger:'🪠',bigplunger:'🪠',toilet:'🚽',slipper:'🩴',bigheart:'💗',gun:'🔫'};
+    x.fillText(map[a.type],0,0);
+  }
   if(a.type==='bigplunger'){x.font='20px sans-serif';x.fillText('✨',27,-22)}
   x.restore();
 }
@@ -416,19 +422,21 @@ function end(){
 c.addEventListener('pointerdown',e=>{
   if(!playing)return;
   c.setPointerCapture?.(e.pointerId);
-  dragStartX=e.clientX;dragging=true;dragMoved=false;
+  pointerActive=true;dragging=false;
+  dragStartX=e.clientX;dragStartPlayerX=player.x;
 });
 c.addEventListener('pointermove',e=>{
-  if(!playing||!dragging)return;
-  if(Math.abs(e.clientX-dragStartX)>8)dragMoved=true;
-  if(dragMoved)player.x=e.clientX;
+  if(!playing||!pointerActive)return;
+  const dx=e.clientX-dragStartX;
+  if(!dragging && Math.abs(dx)>8)dragging=true;
+  if(dragging)player.x=Math.max(17,Math.min(W-17,dragStartPlayerX+dx));
 });
 c.addEventListener('pointerup',e=>{
   if(!playing)return;
-  if(!dragMoved&&poopGun)shootAt(e.clientX,e.clientY);
-  dragging=false;dragMoved=false;
+  if(pointerActive && !dragging && poopGun)shootAt(e.clientX,e.clientY);
+  pointerActive=false;dragging=false;
 });
-c.addEventListener('pointercancel',()=>{dragging=false;dragMoved=false});
+c.addEventListener('pointercancel',()=>{pointerActive=false;dragging=false});
 document.addEventListener('touchmove',e=>{if(playing)e.preventDefault()},{passive:false});
 </script>
 </body>
