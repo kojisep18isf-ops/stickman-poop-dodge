@@ -26,9 +26,9 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 #hpbar{height:13px;background:#ddd;border:2px solid #222;border-radius:10px;overflow:hidden;margin-top:3px}
 #hpfill{height:100%;width:100%;background:#45c95b}
 #status{position:fixed;top:70px;left:0;right:0;z-index:4;text-align:center;font-weight:1000;font-size:18px;color:#222;text-shadow:0 2px #fff;pointer-events:none}
-.hint{position:absolute;bottom:10px;font-size:12px;color:#2229}
+.hint{position:absolute;bottom:10px;font-size:12px;color:#2229}.version{position:absolute;right:10px;bottom:8px;font-size:11px;color:#2228;font-weight:800}
 .ranking{min-width:210px;padding:10px 24px;margin-bottom:16px}
-.scores{font-size:22px;font-weight:900;line-height:1.5}
+.scores{font-size:22px;font-weight:900;line-height:1.5;cursor:pointer}.scores:active{transform:scale(.98)}
 .helpPanel{width:min(92vw,620px);max-height:90vh;overflow:auto;background:#fffdf4;border:4px solid #222;border-radius:22px;padding:18px;box-shadow:0 8px #222;color:#222}
 .helpPanel h2{margin:0 0 8px}.helpIntro{font-weight:700;line-height:1.5}
 .helpGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0 16px}
@@ -47,11 +47,11 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 <div id="start" class="screen">
 <h1 class="title">棒人間💩<br>うんち大避けゲーム</h1>
 <div>降り注ぐうんちをよけて、できるだけ長く生き残れ！</div>
-<div class="box ranking"><small>BEST 3</small><div id="scoreList" class="scores"></div></div>
+<div class="box ranking"><small>BEST 3</small><div id="scoreList" class="scores" title="タップで歴代BEST 10"></div><small>タップで歴代BEST 10</small></div>
 <button id="startBtn">GAME START</button>
 <button id="helpBtn" class="helpBtn">📖 遊び方・アイテム説明</button>
 <div id="sound" class="sound">🎵 ホームBGM ON</div>
-<div class="hint">指で完全にドラッグしている間だけ左右移動　／　うんち銃を持ったら「うんちをタップ」で発射</div>
+<div class="hint">指で完全にドラッグしている間だけ左右移動　／　うんち銃を持ったらタップでレーザー発射</div><div class="version">v7.0</div>
 </div>
 
 <div id="hud" class="hidden">
@@ -60,6 +60,14 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 <div id="gunhud" class="hudbox hidden">🔫 <span id="ammo">10</span> / 10</div>
 </div>
 <div id="status"></div>
+
+<div id="rankingPanel" class="screen hidden">
+ <div class="helpPanel">
+  <h2>🏆 歴代 BEST 10</h2>
+  <div id="allScoreList" class="scores"></div>
+  <button id="closeRanking">閉じる</button>
+ </div>
+</div>
 
 <div id="help" class="screen hidden">
 <div class="helpPanel">
@@ -79,7 +87,7 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 <div><span>🩴</span><b>スリッパ</b><small>5秒間スピードアップ</small></div>
 <div><span>💗</span><b>大きなハート</b><small>HP +20</small></div>
 <div><span>🔥💩</span><b>炎のうんち</b><small>取るとHPが半減</small></div>
-<div><span>🔫</span><b>うんちの銃</b><small>全10発。うんちをタップして撃ち落とす</small></div>
+<div><span>🔫</span><b>うんちの銃</b><small>全10発。タップした方向へ0.2秒レーザーを発射し、触れたうんちを消す</small></div>
 </div>
 <button id="closeHelp">閉じる</button>
 </div></div>
@@ -99,6 +107,7 @@ const $=id=>document.getElementById(id);
 const start=$('start'),over=$('over'),hud=$('hud'),status=$('status');
 const startBtn=$('startBtn'),retry=$('retry'),homeBtn=$('homeBtn'),sound=$('sound'),sound2=$('sound2');
 const help=$('help'),helpBtn=$('helpBtn'),closeHelp=$('closeHelp');
+const rankingPanel=$('rankingPanel'),allScoreList=$('allScoreList'),closeRanking=$('closeRanking'),scoreList=$('scoreList');
 const timeEl=$('time'),hpEl=$('hp'),hpfill=$('hpfill'),final=$('final'),record=$('record');
 const gunhud=$('gunhud'),ammoEl=$('ammo');
 
@@ -130,20 +139,26 @@ addEventListener('resize',resize);
 if(screen.orientation) screen.orientation.addEventListener('change',()=>setTimeout(resize,50));
 resize();
 
-const KEY='stickman_poop_scores_v3';
-let scores=JSON.parse(localStorage.getItem(KEY)||'[]');
-if(!Array.isArray(scores))scores=[];
-scores=scores.map(Number).filter(Number.isFinite).sort((a,b)=>b-a).slice(0,3);
+const KEY='stickman_poop_scores_v7';
+const OLD_KEY='stickman_poop_scores_v3';
+let scores=JSON.parse(localStorage.getItem(KEY)||'null');
+if(!Array.isArray(scores)){
+  const oldScores=JSON.parse(localStorage.getItem(OLD_KEY)||'[]');
+  scores=Array.isArray(oldScores)?oldScores:[];
+}
+scores=scores.map(Number).filter(Number.isFinite).sort((a,b)=>b-a).slice(0,10);
+localStorage.setItem(KEY,JSON.stringify(scores));
 function saveScore(v){
-  scores.push(v);scores=scores.filter(Number.isFinite).sort((a,b)=>b-a).slice(0,3);
+  scores.push(v);scores=scores.filter(Number.isFinite).sort((a,b)=>b-a).slice(0,10);
   localStorage.setItem(KEY,JSON.stringify(scores));
 }
 function renderScores(){
-  const list=$('scoreList');
-  list.innerHTML=scores.length?scores.map((v,i)=>`<div>${['🥇','🥈','🥉'][i]} ${v.toFixed(2)}秒</div>`).join(''):'<div>まだ記録がありません</div>';
+  scoreList.innerHTML=scores.length?scores.slice(0,3).map((v,i)=>`<div>${['🥇','🥈','🥉'][i]} ${v.toFixed(2)}秒</div>`).join(''):'<div>まだ記録がありません</div>';
+}
+function renderAllScores(){
+  allScoreList.innerHTML=scores.length?scores.map((v,i)=>`<div>${i+1}. ${v.toFixed(2)}秒</div>`).join(''):'<div>まだ記録がありません</div>';
 }
 renderScores();
-
 function reset(){
   player.x=W/2;player.y=ground()-player.h;
   dragging=false;pointerActive=false;dragTargetX=player.x;bullets=[];
@@ -181,7 +196,7 @@ function sfx(kind){
 
 function startGame(){
   stopHomeBgm();
-  start.classList.add('hidden');over.classList.add('hidden');hud.classList.remove('hidden');
+  start.classList.add('hidden');over.classList.add('hidden');rankingPanel.classList.add('hidden');hud.classList.remove('hidden');
   playing=true;HP=100;t=0;poop=[];items=[];bullets=[];
   inv=slow=fast=purpleBoost=stun=0;poopGun=false;gunAmmo=0;gunFlash=0;spawn=0;itemSpawn=1.5;gunhud.classList.add('hidden');ammoEl.textContent='10';
   reset();startTime=performance.now();last=startTime;status.textContent='';
@@ -189,7 +204,7 @@ function startGame(){
 }
 function goHome(){
   playing=false;dragging=false;stopHomeBgm();
-  over.classList.add('hidden');hud.classList.add('hidden');help.classList.add('hidden');start.classList.remove('hidden');
+  over.classList.add('hidden');hud.classList.add('hidden');help.classList.add('hidden');rankingPanel.classList.add('hidden');start.classList.remove('hidden');
   status.textContent='';renderScores();homeBgmStart();
 }
 function toggle(){
@@ -202,6 +217,8 @@ retry.addEventListener('click',startGame);
 homeBtn.addEventListener('click',goHome);
 helpBtn.addEventListener('click',()=>help.classList.remove('hidden'));
 closeHelp.addEventListener('click',()=>help.classList.add('hidden'));
+scoreList.addEventListener('click',()=>{renderAllScores();rankingPanel.classList.remove('hidden')});
+closeRanking.addEventListener('click',()=>rankingPanel.classList.add('hidden'));
 sound.addEventListener('click',toggle);sound2.addEventListener('click',toggle);
 document.addEventListener('pointerdown',()=>{if(!playing&&!help.classList.contains('hidden'))return;if(!playing)homeBgmStart()});
 
@@ -211,17 +228,11 @@ function spawnPoop(){
   poop.push({x:30+Math.random()*Math.max(1,W-60),y:-38,s:type==='gold'?34:31,type,vy:145+Math.random()*75+t*3,rot:Math.random()*6.2});
 }
 function spawnItem(){
-  const r=Math.random();
-  let type;
-  if(r<.15)type='heart';
-  else if(r<.25)type='broken';
-  else if(r<.36)type='plunger';
-  else if(r<.45)type='bigplunger';
-  else if(r<.55)type='toilet';
-  else if(r<.65)type='slipper';
-  else if(r<.75)type='bigheart';
-  else if(r<.86)type='fire';
-  else type='gun';
+  // 大きなすっぽん：約70%減、大きなハート：約10%減。銃は従来どおり。
+  const weights=[['heart',15],['broken',10],['plunger',11],['bigplunger',2.7],['toilet',10],['slipper',10],['bigheart',9],['fire',14],['gun',14]];
+  const total=weights.reduce((a,b)=>a+b[1],0);
+  let r=Math.random()*total,type='gun';
+  for(const [name,w] of weights){r-=w;if(r<=0){type=name;break}}
   items.push({x:28+Math.random()*Math.max(1,W-56),y:-35,type,vy:120+Math.random()*45});
 }
 function hit(o){
@@ -232,19 +243,22 @@ function hit(o){
 }
 function shootAt(tx,ty){
   if(!poopGun||gunAmmo<=0)return;
-  let best=-1,bestDist=70**2;
-  for(let i=0;i<poop.length;i++){
-    const p=poop[i],d=(p.x-tx)**2+(p.y-ty)**2;
-    if(d<bestDist){bestDist=d;best=i;}
-  }
-  if(best>=0){
-    const p=poop[best];
-    bullets.push({x:player.x,y:player.y+20,tx:p.x,ty:p.y,life:.16});
-    poop.splice(best,1);gunAmmo--;ammoEl.textContent=gunAmmo;gunFlash=.12;sfx('shoot');
-    if(gunAmmo<=0){poopGun=false;gunAmmo=0;gunhud.classList.add('hidden');status.textContent='🔫 弾切れ！'}
-    else {status.textContent='🔫 バキューン！ 残弾 '+gunAmmo+'発';}
-    setTimeout(()=>{if(status.textContent.startsWith('🔫 バキューン！'))status.textContent=''},350);
-  }
+  const dx=tx-player.x,dy=ty-(player.y+20);
+  const len=Math.hypot(dx,dy)||1;
+  const ux=dx/len,uy=dy/len;
+  const far=Math.hypot(W,H)*1.5;
+  const sx=player.x,sy=player.y+20;
+  bullets.push({x:sx,y:sy,tx:sx+ux*far,ty:sy+uy*far,life:.2});
+  gunAmmo--;ammoEl.textContent=gunAmmo;gunFlash=.12;sfx('shoot');
+  status.textContent=gunAmmo<=0?'🔫 弾切れ！':'🔫 レーザー発射！ 残弾 '+gunAmmo+'発';
+  if(gunAmmo<=0){poopGun=false;gunhud.classList.add('hidden')}
+  setTimeout(()=>{if(status.textContent.startsWith('🔫 レーザー発射！'))status.textContent=''},350);
+}
+function pointToSegmentDistance(px,py,ax,ay,bx,by){
+  const dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy;
+  if(len2===0)return Math.hypot(px-ax,py-ay);
+  const u=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/len2));
+  return Math.hypot(px-(ax+u*dx),py-(ay+u*dy));
 }
 function update(dt){
   t=(performance.now()-startTime)/1000;
@@ -312,7 +326,14 @@ function update(dt){
     if(a.y>H+60)items.splice(i,1);
   }
 
-  for(let i=bullets.length-1;i>=0;i--){bullets[i].life-=dt;if(bullets[i].life<=0)bullets.splice(i,1)}
+  for(let bi=bullets.length-1;bi>=0;bi--){
+    const b=bullets[bi];b.life-=dt;
+    for(let pi=poop.length-1;pi>=0;pi--){
+      const p=poop[pi],reach=Math.max(13,p.s*.62);
+      if(pointToSegmentDistance(p.x,p.y,b.x,b.y,b.tx,b.ty)<=reach)poop.splice(pi,1);
+    }
+    if(b.life<=0)bullets.splice(bi,1);
+  }
   gunFlash=Math.max(0,gunFlash-dt);
 
   timeEl.textContent=t.toFixed(2);hpEl.textContent=HP;hpfill.style.width=HP+'%';
@@ -331,7 +352,7 @@ function cloud(cx,cy,s,night=false){
 function drawPoop(p){
   x.save();x.translate(p.x,p.y);x.rotate(p.rot);
   const s=p.s*1.18;
-  const col=p.type==='gold'?'#ffd22e':p.type==='green'?'#39b94a':p.type==='purple'?'#a96be8':p.type==='orange'?'#ff9f1c':'#f38ab5';
+  const col=p.type==='gold'?'#ffd22e':p.type==='green'?'#39b94a':p.type==='purple'?'#a96be8':p.type==='orange'?'#ff9f1c':p.type==='fire'?'#7a4525':'#f38ab5';
   x.strokeStyle='#5b3420';x.lineWidth=Math.max(2,s*.08);x.lineJoin='round';x.fillStyle=col;
   x.beginPath();
   x.moveTo(-s*.78,s*.42);x.bezierCurveTo(-s*.92,s*.05,-s*.72,-s*.12,-s*.48,-s*.10);
@@ -355,15 +376,15 @@ function drawItem(a){
   x.save();x.translate(a.x,a.y);x.textAlign='center';x.textBaseline='middle';
   const big=['bigplunger','bigheart'].includes(a.type);
   if(a.type==='fire'){
-    // 炎を後ろ、うんちを手前に重ねて描く
-    x.font='46px sans-serif';x.fillText('🔥',0,-12);
-    x.font='34px sans-serif';x.fillText('💩',0,10);
+    // 炎を後ろに描き、その上に他のうんちと同じサイズのうんちを重ねる
+    x.font='38px sans-serif';x.fillText('🔥',0,-14);
+    drawPoop({x:0,y:6,s:31,type:'fire',rot:0});
   }else{
-    x.font=(big?'46':'39')+'px sans-serif';
+    x.font=(big?'54':'46')+'px sans-serif';
     const map={heart:'❤️',broken:'💔',plunger:'🪠',bigplunger:'🪠',toilet:'🚽',slipper:'🩴',bigheart:'💗',gun:'🔫'};
     x.fillText(map[a.type],0,0);
   }
-  if(a.type==='bigplunger'){x.font='20px sans-serif';x.fillText('✨',27,-22)}
+  if(a.type==='bigplunger'){x.font='22px sans-serif';x.fillText('✨',31,-26)}
   x.restore();
 }
 function drawSky(){
