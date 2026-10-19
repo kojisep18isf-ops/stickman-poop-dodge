@@ -105,7 +105,7 @@ const gunhud=$('gunhud'),ammoEl=$('ammo');
 let W=innerWidth,H=innerHeight,D=1;
 let playing=false,last=0,startTime=0,t=0,HP=100;
 let poop=[],items=[],bullets=[];
-let dragging=false,pointerActive=false,dragStartX=0,dragStartPlayerX=0;
+let dragging=false,pointerActive=false,dragStartX=0,dragStartPlayerX=0,dragTargetX=0;
 let spawn=0,itemSpawn=2;
 let inv=0,slow=0,fast=0,purpleBoost=0,stun=0;
 let poopGun=false,gunAmmo=0,gunFlash=0;
@@ -146,7 +146,7 @@ renderScores();
 
 function reset(){
   player.x=W/2;player.y=ground()-player.h;
-  dragging=false;pointerActive=false;bullets=[];
+  dragging=false;pointerActive=false;dragTargetX=player.x;bullets=[];
 }
 function tone(f,d=.12,type='sine',v=.04){
   if(!bgm||!audio)return;
@@ -248,10 +248,14 @@ function shootAt(tx,ty){
 }
 function update(dt){
   t=(performance.now()-startTime)/1000;
-  let sp=360;if(t<slow)sp*=.42;if(t<fast)sp*=1.75;
-  if(dragging&&! (t<stun)){
-    const dx=dragStartX-player.x;
-    player.x+=Math.sign(dx)*Math.min(Math.abs(dx),sp*dt);
+  // ドラッグ中だけ、固定速度で指の位置へ追従。
+  // 指を止めても勝手に加速せず、目標位置に着いたら止まる。
+  let sp=300;if(t<slow)sp*=.42;if(t<fast)sp*=1.75;
+  if(dragging && !(t<stun)){
+    const dx=dragTargetX-player.x;
+    const step=Math.min(Math.abs(dx),sp*dt);
+    if(Math.abs(dx)>0.5) player.x+=Math.sign(dx)*step;
+    else player.x=dragTargetX;
   }
   player.x=Math.max(17,Math.min(W-17,player.x));
   player.y=ground()-player.h;
@@ -423,20 +427,20 @@ c.addEventListener('pointerdown',e=>{
   if(!playing)return;
   c.setPointerCapture?.(e.pointerId);
   pointerActive=true;dragging=false;
-  dragStartX=e.clientX;dragStartPlayerX=player.x;
+  dragStartX=e.clientX;dragStartPlayerX=player.x;dragTargetX=player.x;
 });
 c.addEventListener('pointermove',e=>{
   if(!playing||!pointerActive)return;
   const dx=e.clientX-dragStartX;
   if(!dragging && Math.abs(dx)>8)dragging=true;
-  if(dragging)player.x=Math.max(17,Math.min(W-17,dragStartPlayerX+dx));
+  if(dragging)dragTargetX=Math.max(17,Math.min(W-17,dragStartPlayerX+dx));
 });
 c.addEventListener('pointerup',e=>{
   if(!playing)return;
   if(pointerActive && !dragging && poopGun)shootAt(e.clientX,e.clientY);
-  pointerActive=false;dragging=false;
+  pointerActive=false;dragging=false;dragTargetX=player.x;
 });
-c.addEventListener('pointercancel',()=>{pointerActive=false;dragging=false});
+c.addEventListener('pointercancel',()=>{pointerActive=false;dragging=false;dragTargetX=player.x});
 document.addEventListener('touchmove',e=>{if(playing)e.preventDefault()},{passive:false});
 </script>
 </body>
