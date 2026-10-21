@@ -345,10 +345,23 @@ function update(dt){
         poop.splice(i,1);continue;
       }
       if(t>=inv){
-        const dmg=p.type==='gold'?20:p.type==='silver'?15:8;
-        if(paperHits>0){paperHits--;status.textContent='🧻 ダメージ無効！ 残り'+paperHits+'回';sfx('paper')}
-        else {HP=Math.max(0,HP-dmg); sfx(p.type); status.textContent=p.type==='green'?'🟢 3秒間スピードダウン！':'💥 HP -'+dmg;}
-        if(p.type==='green')slow=Math.max(slow,t+3);
+        if(p.type==='green'){
+          slow=Math.max(slow,t+3);
+          status.textContent='🟢 3秒間スピードダウン！';
+          sfx('green');
+        }else{
+          const dmg=p.type==='gold'?20:p.type==='silver'?15:8;
+          const damageType=(p.type==='pink'||p.type==='gold'||p.type==='silver');
+          if(damageType && paperHits>0){
+            paperHits--;
+            status.textContent='🧻 ダメージ無効！ 残り'+paperHits+'回';
+            sfx('paper');
+          }else{
+            HP=Math.max(0,HP-dmg);
+            sfx(p.type);
+            status.textContent='💥 HP -'+dmg;
+          }
+        }
       }
       poop.splice(i,1);continue;
     }
@@ -368,7 +381,9 @@ function update(dt){
       if(a.type==='slipper'){fast=Math.max(fast,t+5);status.textContent='🩴 5秒間 スピードアップ！';sfx('slipper')}
       if(a.type==='bigheart'){HP+=20;status.textContent='💗 HP +20';sfx('bigheart')}
       if(a.type==='brown'){HP=Math.max(0,Math.ceil(HP/2));status.textContent='💩 ドカーン！ HP半減！';sfx('brown')}
-      if(a.type==='gun'){poopGun=true;gunAmmo=10;ammoEl.textContent=gunAmmo;gunhud.classList.remove('hidden');status.textContent='🔫 うんち銃ゲット！ 全10発！';sfx('gun')}
+      if(a.type==='magnet'){magnet=Math.max(magnet,t+3);status.textContent='🧲 3秒間 マグネット！';sfx('magnet')}
+      if(a.type==='paper'){paperHits=5;status.textContent='🧻 トイレットペーパー！ 5回ダメージ無効';sfx('paper')}
+      if(a.type==='gun'){poopGun=true;gunAmmo=10;ammoEl.textContent=gunAmmo;gunhud.classList.remove('hidden');status.textContent='🔫 レーザー銃ゲット！ 全10発！';sfx('gun')}
       setTimeout(()=>{status.textContent=''},1000);items.splice(i,1);continue;
     }
     if(a.y>H+60)items.splice(i,1);
