@@ -1,100 +1,478 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>棒人間💩うんち大避けゲーム</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#8fd3ff;font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;touch-action:none}canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:fixed;left:10px;top:10px;display:flex;gap:8px;z-index:5;font-weight:800;font-size:14px}.hudbox{background:#ffffffd9;border:2px solid #333;border-radius:12px;padding:6px 10px;box-shadow:0 2px 0 #333}.menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;background:#ffffff20}.panel{width:min(92vw,520px);max-height:88vh;overflow:auto;background:#fff9;border:3px solid #333;border-radius:24px;padding:24px;text-align:center;box-shadow:0 8px 0 #333}.title{font-size:clamp(26px,7vw,46px);font-weight:900;margin:0 0 8px}.subtitle{margin:0 0 18px;font-weight:700}.btn{border:3px solid #333;background:#fff;border-radius:16px;padding:12px 18px;margin:6px;font-size:17px;font-weight:900;box-shadow:0 4px 0 #333;cursor:pointer}.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #333}.best{margin:12px auto;padding:10px 14px;background:#ffffffd9;border:2px solid #333;border-radius:16px;max-width:300px;cursor:pointer}.best h3{margin:0 0 5px}.best ol{margin:0;padding-left:26px;text-align:left}.version{position:fixed;right:8px;bottom:6px;font-size:12px;font-weight:800;opacity:.65;z-index:11}.hidden{display:none!important}.help{text-align:left}.help h3{margin:12px 0 6px}.help section{background:#ffffffcc;border:2px solid #333;border-radius:14px;padding:10px;margin:8px 0}.help .row{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px dashed #aaa}.help .row:last-child{border-bottom:0}.emoji{font-size:30px;width:46px;min-width:46px;text-align:center}.poopIcon{display:inline-block;position:relative;width:38px;height:34px;vertical-align:middle}.poopIcon:before,.poopIcon:after{content:"";position:absolute;left:50%;transform:translateX(-50%);background:var(--pc);border:2px solid #333}.poopIcon:before{bottom:2px;width:34px;height:14px;border-radius:50% 50% 42% 42%}.poopIcon:after{bottom:11px;width:24px;height:14px;border-radius:50% 50% 45% 45%;box-shadow:0 -9px 0 -3px var(--pc)}.poopPink{--pc:#ef8fb8}.poopBrown{--pc:#8a4b2a}.poopGold{--pc:#e7b51b}.poopGreen{--pc:#46b94a}.poopPurple{--pc:#8e54c7}.poopOrange{--pc:#f28a2e}.poopSilver{--pc:#bfc7d0}.poopInk{--pc:#151515}.small{font-size:12px;display:block;color:#333}.status{position:fixed;left:50%;top:72px;transform:translateX(-50%);z-index:6;background:#ffffffdd;border:2px solid #333;border-radius:12px;padding:5px 10px;font-weight:800;pointer-events:none}.laserHud{position:fixed;right:10px;top:10px;z-index:6}.blackout{position:fixed;left:0;right:0;top:0;height:50%;background:#050505;z-index:4;pointer-events:none;opacity:.96}.gameoverScore{font-size:34px;font-weight:900}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;touch-action:none;font-family:system-ui,-apple-system,sans-serif}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:5}
+#start{background:linear-gradient(#6ed5ff 0 68%,#8bd45b 68%)}
+#over{background:#0008;color:#fff}
+.title{font-size:clamp(30px,8vw,52px);font-weight:900;line-height:1.12;color:#222;text-shadow:3px 3px #fff;margin:0 16px 12px}
+#over .title{color:#fff;text-shadow:3px 3px #000}
+.box{background:#fffffff0;border:3px solid #222;border-radius:18px;padding:12px 28px;margin:10px 0 20px;color:#222;box-shadow:0 5px 0 #0004}
+.box small{display:block;font-weight:900}.box strong{font-size:34px}
+button{border:3px solid #222;border-radius:16px;background:#ffd83d;padding:14px 30px;font-size:21px;font-weight:900;box-shadow:0 5px #222}
+button:active{transform:translateY(4px);box-shadow:0 1px #222}
+.helpBtn,.homeBtn{margin-top:12px;background:#fff;font-size:16px;padding:10px 20px;box-shadow:0 3px #222}
+.homeBtn{background:#8ee4ff}
+.sound{margin-top:16px;background:#fff;color:#222;border:2px solid #222;border-radius:12px;padding:8px 14px;font-weight:800}
+.hidden{display:none!important}
+#hud{position:fixed;top:8px;left:8px;right:8px;z-index:4;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+.hudbox{background:#fffffff0;border:2px solid #222;border-radius:12px;padding:6px 9px;font-weight:900;min-width:105px}
+#hpbar{height:13px;background:#ddd;border:2px solid #222;border-radius:10px;overflow:hidden;margin-top:3px}
+#hpfill{height:100%;width:100%;background:#45c95b}
+#status{position:fixed;top:70px;left:0;right:0;z-index:4;text-align:center;font-weight:1000;font-size:18px;color:#222;text-shadow:0 2px #fff;pointer-events:none}
+.hint{position:absolute;bottom:10px;font-size:12px;color:#2229}.version{position:absolute;right:10px;bottom:8px;font-size:11px;color:#2228;font-weight:800}
+.ranking{min-width:210px;padding:10px 24px;margin-bottom:16px}
+.scores{font-size:22px;font-weight:900;line-height:1.5;cursor:pointer}.scores:active{transform:scale(.98)}
+.helpPanel{width:min(92vw,620px);max-height:90vh;overflow:auto;background:#fffdf4;border:4px solid #222;border-radius:22px;padding:18px;box-shadow:0 8px #222;color:#222}
+.helpPanel h2{margin:0 0 8px}.helpIntro{font-weight:700;line-height:1.5}
+.helpGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 0 16px}
+.helpGrid div{background:#fff;border:2px solid #bbb;border-radius:14px;padding:8px;display:grid;grid-template-columns:38px 1fr;column-gap:6px;text-align:left;align-items:center}
+.helpGrid span{grid-row:1/3;font-size:29px;text-align:center}.helpGrid b{font-size:14px}.helpGrid small{font-size:11px;color:#555}
+@media(max-height:520px){
+ .title{font-size:30px}.ranking{margin:4px 0 8px;padding:6px 18px}.scores{font-size:16px}
+ button{padding:9px 20px;font-size:17px}.helpBtn{margin-top:6px}.sound{margin-top:8px}
+ .hint{display:none}
+}
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<div id="hud" class="hud hidden"><div class="hudbox">TIME <span id="time">0.0</span></div><div class="hudbox">HP <span id="hp">100</span></div></div>
-<div id="gunhud" class="hudbox laserHud hidden">🔫 <span id="ammo">10</span> / 10</div>
-<div id="status" class="status hidden"></div>
-<div id="blackout" class="blackout hidden"></div>
-<div id="home" class="menu"><div class="panel">
-<h1 class="title">棒人間💩<br>うんち大避けゲーム</h1><p class="subtitle">落ちてくるうんちを避けて、どこまで生き残れる？</p>
-<div id="best" class="best"><h3>🏆 BEST 3</h3><ol id="bestList"></ol><small>タップすると歴代BEST 10</small></div>
-<button id="start" class="btn">▶ ゲーム開始</button><button id="helpBtn" class="btn">❓ あそびかた</button>
+<canvas id="game"></canvas>
+
+<div id="start" class="screen">
+<h1 class="title">棒人間💩<br>うんち大避けゲーム</h1>
+<div>降り注ぐうんちをよけて、できるだけ長く生き残れ！</div>
+<div class="box ranking"><small>BEST 3</small><div id="scoreList" class="scores" title="タップで歴代BEST 10"></div><small>タップで歴代BEST 10</small></div>
+<button id="startBtn">GAME START</button>
+<button id="helpBtn" class="helpBtn">📖 遊び方・アイテム説明</button>
+<div id="sound" class="sound">🎵 ホームBGM ON</div>
+<div class="hint">指で完全にドラッグしている間だけ左右移動　／　うんち銃を持ったらタップでレーザー発射</div><div class="version">v10.0</div>
+</div>
+
+<div id="hud" class="hidden">
+<div class="hudbox">TIME<br><span id="time">0.00</span> 秒</div>
+<div class="hudbox">HP <span id="hp">100</span><div id="hpbar"><div id="hpfill"></div></div></div>
+<div id="gunhud" class="hudbox hidden">🔫 <span id="ammo">10</span> / 10</div>
+</div>
+<div id="status"></div>
+
+<div id="rankingPanel" class="screen hidden">
+ <div class="helpPanel">
+  <h2>🏆 歴代 BEST 10</h2>
+  <div id="allScoreList" class="scores"></div>
+  <button id="closeRanking">閉じる</button>
+ </div>
+</div>
+
+<div id="help" class="screen hidden">
+<div class="helpPanel">
+<h2>📖 遊び方・アイテム説明</h2>
+<p class="helpIntro">普段は画面を指で完全にドラッグしている間だけ、棒人間を左右に移動。<br>「レーザー銃」を取ったら、画面をタップしてその方向へレーザーを発射しよう！</p>
+<div class="helpGrid">
+<div><span>🩷</span><b>ピンクうんち</b><small>当たると HP -8</small></div>
+<div><span>🟡</span><b>金のうんち</b><small>当たると HP -20</small></div>
+<div><span>🟢</span><b>緑のうんち</b><small>3秒間スピードダウン</small></div>
+<div><span>🟣</span><b>紫うんち</b><small>5秒間、うんちが1.5倍速</small></div>
+<div><span>🟠</span><b>オレンジうんち</b><small>触ると1秒間その場で硬直</small></div>
+<div><span>⚪</span><b>シルバーうんち</b><small>当たると HP -15</small></div>
+<div><span>🖋️</span><b>イカスミうんち</b><small>上半分が黒くなり、うんちが見えにくくなる</small></div>
+<div><span>❤️</span><b>ハート</b><small>HP +10</small></div>
+<div><span>💔</span><b>割れたハート</b><small>HP -5</small></div>
+<div><span>🪠</span><b>スッポン</b><small>10秒間 無敵</small></div>
+<div><span>🪠✨</span><b>大きなすっぽん</b><small>20秒間 無敵</small></div>
+<div><span>🚽</span><b>便器</b><small>画面のうんちを全消去</small></div>
+<div><span>🩴</span><b>スリッパ</b><small>5秒間スピードアップ</small></div>
+<div><span>💗</span><b>大きなハート</b><small>HP +20（HP100超え可）</small></div>
+<div><span>🧲</span><b>マグネット</b><small>3秒間、アイテムを棒人間へ引き寄せる</small></div>
+<div><span>🧻</span><b>トイレットペーパー</b><small>HPが減るうんちのダメージを5回無効</small></div>
+<div><span>💩</span><b>茶うんち</b><small>当たると爆発して HP 半減</small></div>
+<div><span>🔫</span><b>レーザー銃</b><small>全10発。タップした方向へ0.2秒レーザーを発射し、触れたうんちを消す</small></div>
+</div>
+<button id="closeHelp">閉じる</button>
 </div></div>
-<div id="ranking" class="menu hidden"><div class="panel"><h2>🏆 歴代 BEST 10</h2><ol id="rankList" style="text-align:left;max-width:280px;margin:15px auto"></ol><button class="btn" id="rankBack">戻る</button></div></div>
-<div id="help" class="menu hidden"><div class="panel help"><h2>❓ あそびかた</h2><section><h3>🎮 操作</h3><div class="row"><span class="emoji">👆</span><div><b>移動</b><span class="small">画面を左右にドラッグすると棒人間が動きます。タップだけでは移動しません。</span></div></div><div class="row"><span class="emoji">🔫</span><div><b>レーザー銃</b><span class="small">レーザー銃を持っている間は、タップした方向へ1発発射します。ドラッグ操作はそのまま移動に使えます。</span></div></div></section>
-<section><h3>💩 うんちの種類</h3>
-<div class="row"><span class="emoji"><span class="poopIcon poopPink"></span></span><div><b>ピンクうんち</b><span class="small">当たるとHP −8</span></div></div>
-<div class="row"><span class="emoji"><span class="poopIcon poopBrown"></span></span><div><b>茶うんち</b><span class="small">当たるとHP −8。特別な追加効果はありません</span></div></div>
-<div class="row"><span class="emoji"><span class="poopIcon poopGold"></span></span><div><b>金うんち</b><span class="small">当たるとHP −20</span></div></div>
-<div class="row"><span class="emoji"><span class="poopIcon poopOrange"></span></span><div><b>オレンジうんち</b><span class="small">当たると1秒間その場で硬直</span></div></div>
-<div class="row"><span class="emoji"><span class="poopIcon poopSilver"></span></span><div><b>シルバーうんち</b><span class="small">当たるとHP −15</span></div></div>
-<div class="row"><span class="emoji"><span class="poopIcon poopInk"></span></span><div><b>イカスミうんち</b><span class="small">約5秒間、画面上部半分が黒くなり、落ちてくるうんちが見えにくくなる</span></div></div>
-<div class="row"><span class="emoji"><span class="poopIcon poopGreen"></span></span><div><b>緑うんち</b><span class="small">約3秒間、棒人間の移動が遅くなる</span></div></div>
-<div class="row"><span class="emoji"><span class="poopIcon poopPurple"></span></span><div><b>紫うんち</b><span class="small">約5秒間、落下うんちが1.5倍速</span></div></div>
-</section>
-<section><h3>🎁 有利なアイテム</h3>
-<div class="row"><span class="emoji">❤️</span><div><b>ハート</b><span class="small">HP +10。HP100を超えて回復できます</span></div></div>
-<div class="row"><span class="emoji">💗</span><div><b>大きなハート</b><span class="small">HP +20。HP100を超えて回復できます</span></div></div>
-<div class="row"><span class="emoji">🪠</span><div><b>すっぽん</b><span class="small">10秒間無敵</span></div></div>
-<div class="row"><span class="emoji">🪠✨</span><div><b>大きなすっぽん</b><span class="small">20秒間無敵。出現率は低め</span></div></div>
-<div class="row"><span class="emoji">🩴</span><div><b>スリッパ</b><span class="small">約5秒間、移動速度アップ</span></div></div>
-<div class="row"><span class="emoji">🚽</span><div><b>トイレ</b><span class="small">画面上のうんちを全部消す</span></div></div>
-<div class="row"><span class="emoji">🧲</span><div><b>マグネット</b><span class="small">3秒間、アイテムを棒人間へ引き寄せる</span></div></div>
-<div class="row"><span class="emoji">🧻</span><div><b>トイレットペーパー</b><span class="small">HPが減るうんちを5回まで無効化。緑・紫・オレンジ・イカスミなどの特殊効果は防ぎません</span></div></div>
-<div class="row"><span class="emoji">🔫</span><div><b>レーザー銃</b><span class="small">10発。タップ方向へ画面いっぱいのレーザーを0.2秒発射し、触れたうんちを消します</span></div></div>
-</section>
-<section><h3>⚠️ 不利なアイテム・効果</h3>
-<div class="row"><span class="emoji">💔</span><div><b>壊れたハート</b><span class="small">取るとHP −5</span></div></div>
-</section>
-<button class="btn" id="helpBack">戻る</button>
-</div></div>
-<div id="over" class="menu hidden"><div class="panel"><h2>💥 GAME OVER</h2><div class="gameoverScore"><span id="score">0.0</span> 秒</div><button class="btn" id="retry">もう一度</button><button class="btn" id="overHome">ホーム</button></div></div>
-<div class="version">v9.0</div>
+
+<div id="over" class="screen hidden">
+<h1 class="title">GAME OVER</h1>
+<div class="box"><small>SURVIVAL TIME</small><strong id="final">0.00秒</strong><div id="record"></div></div>
+<button id="retry">RETRY</button>
+<button id="homeBtn" class="homeBtn">🏠 ホーム画面へ</button>
+<div id="sound2" class="sound">🎵 ホームBGM ON</div>
+</div>
+
 <script>
 'use strict';
-const c=document.getElementById('c'),x=c.getContext('2d');
+const c=document.getElementById('game'),x=c.getContext('2d');
 const $=id=>document.getElementById(id);
+const start=$('start'),over=$('over'),hud=$('hud'),status=$('status');
+const startBtn=$('startBtn'),retry=$('retry'),homeBtn=$('homeBtn'),sound=$('sound'),sound2=$('sound2');
+const help=$('help'),helpBtn=$('helpBtn'),closeHelp=$('closeHelp');
+const rankingPanel=$('rankingPanel'),allScoreList=$('allScoreList'),closeRanking=$('closeRanking'),scoreList=$('scoreList');
+const timeEl=$('time'),hpEl=$('hp'),hpfill=$('hpfill'),final=$('final'),record=$('record');
+const gunhud=$('gunhud'),ammoEl=$('ammo');
+
 let W=innerWidth,H=innerHeight,D=1;
 let playing=false,last=0,startTime=0,t=0,HP=100;
-let poop=[],items=[],laser=null;
-let drag=false,dragMoved=false,lastPointerX=0;
-let spawn=0,itemSpawn=1.8;
-let inv=0,slow=0,fast=0,purpleBoost=0,magnet=0,blackout=0,paper=0;
-let poopGun=false,gunAmmo=0;
+let poop=[],items=[],bullets=[];
+let dragging=false,pointerActive=false,dragStartX=0,dragStartPlayerX=0,dragTargetX=0;
+let spawn=0,itemSpawn=2;
+let inv=0,slow=0,fast=0,purpleBoost=0,stun=0,ink=0,magnet=0,paperHits=0;
+let poopGun=false,gunAmmo=0,gunFlash=0;
 let audio=null,music=null,homeMusic=null,bgm=true;
+
 const player={x:0,y:0,w:34,h:62};
-const ground=()=>H-34;
-function resize(){const oldW=W||innerWidth;W=innerWidth;H=innerHeight;D=Math.min(devicePixelRatio||1,2);c.width=Math.max(1,Math.floor(W*D));c.height=Math.max(1,Math.floor(H*D));x.setTransform(D,0,0,D,0,0);if(player.x)player.x=Math.max(17,Math.min(W-17,player.x/oldW*W));else player.x=W/2;player.y=ground()-player.h;}
-addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,80));resize();
-function scores(){try{return JSON.parse(localStorage.getItem('stickmanScores')||'[]').filter(n=>Number.isFinite(n)).sort((a,b)=>b-a).slice(0,10)}catch(e){return[]}}
-function saveScore(v){const a=scores();a.push(+v.toFixed(1));a.sort((a,b)=>b-a);localStorage.setItem('stickmanScores',JSON.stringify(a.slice(0,10)));}
-function renderScores(){const a=scores();$('bestList').innerHTML=(a.length?a.slice(0,3):[0]).map(n=>`<li>${n.toFixed(1)} 秒</li>`).join('');$('rankList').innerHTML=(a.length?a:Array(10).fill(0)).slice(0,10).map((n,i)=>`<li>${n.toFixed(1)} 秒</li>`).join('');}
+const ground=()=>Math.max(44,H-58);
+
+function resize(){
+  const oldW=W||innerWidth;
+  const wasPlaying=playing;
+  W=innerWidth;H=innerHeight;D=Math.min(devicePixelRatio||1,2);
+  c.width=Math.max(1,Math.floor(W*D));c.height=Math.max(1,Math.floor(H*D));
+  x.setTransform(D,0,0,D,0,0);
+  if(player.x){
+    player.x=Math.max(17,Math.min(W-17,player.x/oldW*W));
+  }else player.x=W/2;
+  player.y=ground()-player.h;
+  if(!wasPlaying) player.x=W/2;
+}
+addEventListener('resize',resize);
+if(screen.orientation) screen.orientation.addEventListener('change',()=>setTimeout(resize,50));
+resize();
+
+const KEY='stickman_poop_scores_v10';
+const OLD_KEY='stickman_poop_scores_v3';
+let scores=JSON.parse(localStorage.getItem(KEY)||'null');
+if(!Array.isArray(scores)){
+  const oldScores=JSON.parse(localStorage.getItem(OLD_KEY)||'[]');
+  scores=Array.isArray(oldScores)?oldScores:[];
+}
+scores=scores.map(Number).filter(Number.isFinite).sort((a,b)=>b-a).slice(0,10);
+localStorage.setItem(KEY,JSON.stringify(scores));
+function saveScore(v){
+  scores.push(v);scores=scores.filter(Number.isFinite).sort((a,b)=>b-a).slice(0,10);
+  localStorage.setItem(KEY,JSON.stringify(scores));
+}
+function renderScores(){
+  scoreList.innerHTML=scores.length?scores.slice(0,3).map((v,i)=>`<div>${['🥇','🥈','🥉'][i]} ${v.toFixed(2)}秒</div>`).join(''):'<div>まだ記録がありません</div>';
+}
+function renderAllScores(){
+  allScoreList.innerHTML=scores.length?scores.map((v,i)=>`<div>${i+1}. ${v.toFixed(2)}秒</div>`).join(''):'<div>まだ記録がありません</div>';
+}
 renderScores();
-function show(el){el.classList.remove('hidden')}function hide(el){el.classList.add('hidden')}
-$('best').onclick=()=>{renderScores();hide($('home'));show($('ranking'))};$('rankBack').onclick=()=>{hide($('ranking'));show($('home'))};$('helpBtn').onclick=()=>{hide($('home'));show($('help'))};$('helpBack').onclick=()=>{hide($('help'));show($('home'))};$('start').onclick=startGame;$('retry').onclick=startGame;$('overHome').onclick=home;
-function home(){playing=false;hide($('over'));hide($('help'));hide($('ranking'));hide($('hud'));hide($('gunhud'));hide($('status'));hide($('blackout'));show($('home'));renderScores();}
-function startGame(){playing=true;hide($('home'));hide($('ranking'));hide($('help'));hide($('over'));show($('hud'));hide($('gunhud'));hide($('blackout'));HP=100;t=0;startTime=performance.now();last=startTime;poop=[];items=[];laser=null;spawn=0;itemSpawn=1.8;inv=slow=fast=purpleBoost=magnet=blackout=paper=0;poopGun=false;gunAmmo=0;player.x=W/2;player.y=ground()-player.h;$('status').textContent='';hide($('status'));}
-function sfx(name){/* optional WebAudio effects */}
-function poopType(){const r=Math.random();if(r<.06)return 'gold';if(r<.12)return 'green';if(r<.18)return 'purple';if(r<.23)return 'orange';if(r<.28)return 'silver';if(r<.33)return 'ink';if(r<.66)return 'pink';return 'brown'}
-function spawnPoop(){const size=26+Math.random()*6;poop.push({x:18+Math.random()*(W-36),y:-40,r:size/2,type:poopType(),vy:190+t*2.4+Math.random()*65})}
-function itemType(){const r=Math.random();if(r<.018)return 'bigplunger';if(r<.118)return 'bigheart';if(r<.208)return 'gun';if(r<.328)return 'plunger';if(r<.448)return 'heart';if(r<.558)return 'slipper';if(r<.648)return 'toilet';if(r<.728)return 'magnet';if(r<.828)return 'paper';return 'broken'}
-function spawnItem(){const type=itemType();let s=type==='bigplunger'?56:type==='bigheart'?52:46;items.push({x:18+Math.random()*(W-36),y:-45,s,type,vy:130+t*1.2+Math.random()*35})}
-function rectHit(cx,cy,r,px,py,pw,ph){return cx+r>px-pw/2&&cx-r<px+pw/2&&cy+r>py&&cy-r<py+ph}
-function applyPoop(p){if(inv>0)return;const damage=(p.type==='silver'||p.type==='gold'||p.type==='pink'||p.type==='brown');if(p.type==='green'){slow=3;$('status').textContent='💚 遅くなった！';}else if(p.type==='purple'){purpleBoost=5;$('status').textContent='🟣 うんちが高速化！';}else if(p.type==='orange'){freezePlayer=1;$('status').textContent='😲 びっくり！ 1秒硬直';}else if(p.type==='ink'){blackout=5;$('status').textContent='🖤 イカスミ！ 見えない！';}if(damage){if(paper>0){paper--;$('status').textContent=`🧻 ダメージ無効！ 残り${paper}回`;}else if(p.type==='silver')HP-=15;else if(p.type==='gold')HP-=20;else HP-=8;}show($('status'));}
-function applyItem(a){switch(a.type){case'heart':HP+=10;break;case'bigheart':HP+=20;break;case'plunger':inv=10;break;case'bigplunger':inv=20;break;case'slipper':fast=5;break;case'toilet':poop=[];break;case'magnet':magnet=3;break;case'paper':paper=5;break;case'gun':poopGun=true;gunAmmo=10;show($('gunhud'));$('ammo').textContent=10;break;case'broken':HP-=5;break;}if(a.type!=='gun'){$('status').textContent=a.type==='heart'||a.type==='bigheart'?'❤️ HP回復！':a.type==='plunger'||a.type==='bigplunger'?'🪠 無敵！':a.type==='magnet'?'🧲 アイテム吸引！':a.type==='paper'?'🧻 5回ダメージ無効！':'🎁 GET!';show($('status'));}}
-function shoot(tx,ty){if(!poopGun||gunAmmo<=0)return;gunAmmo--;const dx=tx-player.x,dy=ty-(player.y+25),len=Math.hypot(dx,dy)||1;const ux=dx/len,uy=dy/len;laser={x1:player.x,y1:player.y+25,x2:player.x+ux*Math.max(W,H)*2,y2:player.y+25+uy*Math.max(W,H)*2,life:.2};$('ammo').textContent=gunAmmo;if(gunAmmo<=0){poopGun=false;hide($('gunhud'));$('status').textContent='🔫 弾切れ！';show($('status'));}}
-function pointLineDist(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1;const l2=dx*dx+dy*dy;if(!l2)return Math.hypot(px-x1,py-y1);let q=((px-x1)*dx+(py-y1)*dy)/l2;q=Math.max(0,Math.min(1,q));const xx=x1+q*dx,yy=y1+q*dy;return Math.hypot(px-xx,py-yy)}
-let freezePlayer=0;
-function update(dt){if(!playing)return;t=(performance.now()-startTime)/1000;const mult=purpleBoost>0?1.5:1;spawn-=dt;if(spawn<=0){spawnPoop();spawn=Math.max(.18,.72-t*.004)*1/mult}itemSpawn-=dt;if(itemSpawn<=0){spawnItem();itemSpawn=Math.max(.65,2.4-t*.01)}inv=Math.max(0,inv-dt);slow=Math.max(0,slow-dt);fast=Math.max(0,fast-dt);purpleBoost=Math.max(0,purpleBoost-dt);magnet=Math.max(0,magnet-dt);blackout=Math.max(0,blackout-dt);freezePlayer=Math.max(0,freezePlayer-dt);if(laser){laser.life-=dt;if(laser.life<=0)laser=null}
-const base=300*(slow>0?.48:1)*(fast>0?1.55:1);if(drag&&!freezePlayer){const target=lastPointerX;const diff=target-player.x;const step=Math.sign(diff)*Math.min(Math.abs(diff),base*dt);player.x+=step}player.x=Math.max(17,Math.min(W-17,player.x));
-for(let i=poop.length-1;i>=0;i--){const p=poop[i];p.y+=p.vy*mult*dt;if(laser&&pointLineDist(p.x,p.y,laser.x1,laser.y1,laser.x2,laser.y2)<p.r+5){poop.splice(i,1);continue}if(rectHit(p.x,p.y,p.r,player.x,player.y,player.w,player.h)){applyPoop(p);poop.splice(i,1);continue}if(p.y>H+60)poop.splice(i,1)}
-for(let i=items.length-1;i>=0;i--){const a=items[i];a.y+=a.vy*dt;if(magnet>0){const dx=player.x-a.x,dy=(player.y+25)-a.y,d=Math.hypot(dx,dy)||1;const pull=Math.min(700*dt,d);a.x+=dx/d*pull;a.y+=dy/d*pull}if(rectHit(a.x,a.y,a.s/2,player.x,player.y,player.w,player.h)){applyItem(a);items.splice(i,1);continue}if(a.y>H+70)items.splice(i,1)}
-$('time').textContent=t.toFixed(1);$('hp').textContent=Math.max(0,Math.round(HP));if(HP<=0)endGame();}
-function drawPoop(p){x.save();x.translate(p.x,p.y);const colors={pink:'#ef8fb8',brown:'#8a4b2a',ink:'#151515',silver:'#bfc7d0',gold:'#e7b51b',green:'#46b94a',purple:'#8e54c7',orange:'#f28a2e'};x.fillStyle=colors[p.type]||colors.brown;for(let i=0;i<3;i++){x.beginPath();x.ellipse(0,13-i*7,16-i*4,7,0,0,Math.PI*2);x.fill()}x.fillStyle='#222';x.beginPath();x.arc(-5,9,1.7,0,Math.PI*2);x.arc(5,9,1.7,0,Math.PI*2);x.fill();x.restore()}
-function drawItem(a){x.save();x.translate(a.x,a.y);const sc=a.s/36;x.scale(sc,sc);let e={heart:'❤️',bigheart:'💗',plunger:'🪠',bigplunger:'🪠✨',slipper:'🩴',toilet:'🚽',magnet:'🧲',paper:'🧻',gun:'🔫',broken:'💔'}[a.type]||'🎁';x.font='38px serif';x.textAlign='center';x.textBaseline='middle';x.fillText(e,0,0);x.restore()}
-function drawPlayer(){x.save();x.translate(player.x,player.y);x.strokeStyle='#222';x.lineWidth=5;x.lineCap='round';x.beginPath();x.arc(0,10,10,0,Math.PI*2);x.stroke();x.beginPath();x.moveTo(0,20);x.lineTo(0,43);x.moveTo(0,25);x.lineTo(-14,35);x.moveTo(0,25);x.lineTo(14,35);x.moveTo(0,43);x.lineTo(-12,60);x.moveTo(0,43);x.lineTo(12,60);x.stroke();if(poopGun){x.lineWidth=4;x.beginPath();x.moveTo(9,28);x.lineTo(25,33);x.stroke();x.fillStyle='#555';x.fillRect(21,30,15,5);x.fillRect(29,34,5,9)}if(inv>0){x.strokeStyle='#ffd23c';x.lineWidth=4;x.beginPath();x.arc(0,32,25,0,Math.PI*2);x.stroke()}x.restore()}
-function draw(){const day=(t%90)/90;let sky=day<.33?'#9edbff':day<.66?'#72c6ff':'#18274d';x.fillStyle=sky;x.fillRect(0,0,W,H);if(day>.66){x.fillStyle='#fff';for(let i=0;i<45;i++){const sx=(i*83)%W,sy=(i*47)%Math.max(1,H*.65);x.fillRect(sx,sy,2,2)}}else{x.fillStyle='#ffd95a';x.beginPath();x.arc(W*(.12+day*.76),90,30,0,Math.PI*2);x.fill()}x.fillStyle='#7cc96b';x.fillRect(0,ground(),W,H-ground());for(const p of poop)drawPoop(p);for(const a of items)drawItem(a);if(laser){x.save();x.strokeStyle='#65e8ff';x.shadowColor='#fff';x.shadowBlur=14;x.lineWidth=8;x.globalAlpha=Math.min(1,laser.life/.08);x.beginPath();x.moveTo(laser.x1,laser.y1);x.lineTo(laser.x2,laser.y2);x.stroke();x.restore()}drawPlayer();if(blackout>0){x.fillStyle='rgba(0,0,0,.94)';x.fillRect(0,0,W,H*.5)} }
-function endGame(){if(!playing)return;playing=false;saveScore(t);$('score').textContent=t.toFixed(1);hide($('hud'));hide($('gunhud'));hide($('status'));hide($('blackout'));show($('over'));renderScores()}
-function loop(now){const dt=Math.min(.033,(now-last)/1000||0);last=now;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
-c.addEventListener('pointerdown',e=>{if(!playing)return;c.setPointerCapture?.(e.pointerId);drag=true;dragMoved=false;lastPointerX=e.clientX});
-c.addEventListener('pointermove',e=>{if(!playing||!drag)return;const dx=e.clientX-lastPointerX;if(Math.abs(dx)>8)dragMoved=true;lastPointerX=e.clientX});
-c.addEventListener('pointerup',e=>{if(!playing)return;if(!dragMoved&&poopGun)shoot(e.clientX,e.clientY);drag=false;dragMoved=false});c.addEventListener('pointercancel',()=>{drag=false;dragMoved=false});
-</script></body></html>
+function reset(){
+  player.x=W/2;player.y=ground()-player.h;
+  dragging=false;pointerActive=false;dragTargetX=player.x;bullets=[];
+}
+function tone(f,d=.12,type='sine',v=.04){
+  if(!bgm||!audio)return;
+  const o=audio.createOscillator(),g=audio.createGain();
+  o.type=type;o.frequency.value=f;
+  g.gain.setValueAtTime(v,audio.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);
+  o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+d);
+}
+function audioStart(){
+  if(!bgm)return;
+  if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();
+  if(audio.state==='suspended')audio.resume();
+  if(music)return;
+  let n=0,notes=[262,330,392,330,294,349,440,349];
+  music=setInterval(()=>{if(playing)tone(notes[n++%notes.length],.1,'triangle',.025)},250);
+}
+function homeBgmStart(){
+  if(!bgm)return;
+  if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();
+  if(audio.state==='suspended')audio.resume();
+  if(homeMusic)return;
+  let n=0,notes=[392,494,587,494,440,523,659,523];
+  homeMusic=setInterval(()=>{if(!playing)tone(notes[n++%notes.length],.32,'sine',.018)},520);
+}
+function stopHomeBgm(){if(homeMusic){clearInterval(homeMusic);homeMusic=null}}
+function sfx(kind){
+  const m={hit:90,gold:65,green:150,purple:360,orange:220,silver:120,ink:70,heart:660,broken:100,plunger:180,bigplunger:210,toilet:110,slipper:520,bigheart:740,brown:55,magnet:580,paper:420,gun:500,shoot:900,over:80};
+  if(!audio)audioStart();if(!audio)return;
+  tone(m[kind]||300,.15,kind==='hit'||kind==='fire'?'sawtooth':'sine',.07);
+}
+
+function startGame(){
+  stopHomeBgm();
+  start.classList.add('hidden');over.classList.add('hidden');rankingPanel.classList.add('hidden');hud.classList.remove('hidden');
+  playing=true;HP=100;t=0;poop=[];items=[];bullets=[];
+  inv=slow=fast=purpleBoost=stun=ink=magnet=0;paperHits=0;poopGun=false;gunAmmo=0;gunFlash=0;spawn=0;itemSpawn=1.5;gunhud.classList.add('hidden');ammoEl.textContent='10';
+  reset();startTime=performance.now();last=startTime;status.textContent='';
+  audioStart();requestAnimationFrame(loop);
+}
+function goHome(){
+  playing=false;dragging=false;stopHomeBgm();
+  over.classList.add('hidden');hud.classList.add('hidden');help.classList.add('hidden');rankingPanel.classList.add('hidden');start.classList.remove('hidden');
+  status.textContent='';renderScores();homeBgmStart();
+}
+function toggle(){
+  bgm=!bgm;
+  document.querySelectorAll('.sound').forEach(e=>e.textContent=bgm?'🎵 ホームBGM ON':'🔇 BGM OFF');
+  if(bgm){if(playing)audioStart();else homeBgmStart();}
+}
+startBtn.addEventListener('click',startGame);
+retry.addEventListener('click',startGame);
+homeBtn.addEventListener('click',goHome);
+helpBtn.addEventListener('click',()=>help.classList.remove('hidden'));
+closeHelp.addEventListener('click',()=>help.classList.add('hidden'));
+scoreList.addEventListener('click',()=>{renderAllScores();rankingPanel.classList.remove('hidden')});
+closeRanking.addEventListener('click',()=>rankingPanel.classList.add('hidden'));
+sound.addEventListener('click',toggle);sound2.addEventListener('click',toggle);
+document.addEventListener('pointerdown',()=>{if(!playing&&!help.classList.contains('hidden'))return;if(!playing)homeBgmStart()});
+
+function spawnPoop(){
+  const r=Math.random();
+  const type=r<.10?'gold':r<.21?'green':r<.31?'purple':r<.40?'orange':r<.47?'silver':r<.55?'ink':'pink';
+  poop.push({x:30+Math.random()*Math.max(1,W-60),y:-38,s:type==='gold'?34:31,type,vy:145+Math.random()*75+t*3,rot:Math.random()*6.2});
+}
+function spawnItem(){
+  // 大きなすっぽん：約70%減、大きなハート：約10%減。銃は従来どおり。
+  const weights=[['heart',15],['broken',10],['plunger',11],['bigplunger',0.8],['toilet',10],['slipper',10],['bigheart',8],['brown',14],['magnet',8],['paper',8],['gun',14]];
+  const total=weights.reduce((a,b)=>a+b[1],0);
+  let r=Math.random()*total,type='gun';
+  for(const [name,w] of weights){r-=w;if(r<=0){type=name;break}}
+  items.push({x:28+Math.random()*Math.max(1,W-56),y:-35,type,vy:120+Math.random()*45});
+}
+function hit(o){
+  const r=o.s?o.s*.55:(o.r||20);
+  const px=Math.max(player.x-player.w/2,Math.min(o.x,player.x+player.w/2));
+  const py=Math.max(player.y,Math.min(o.y,player.y+player.h));
+  return (o.x-px)**2+(o.y-py)**2<r*r;
+}
+function shootAt(tx,ty){
+  if(!poopGun||gunAmmo<=0)return;
+  const dx=tx-player.x,dy=ty-(player.y+20);
+  const len=Math.hypot(dx,dy)||1;
+  const ux=dx/len,uy=dy/len;
+  const far=Math.hypot(W,H)*1.5;
+  const sx=player.x,sy=player.y+20;
+  bullets.push({x:sx,y:sy,tx:sx+ux*far,ty:sy+uy*far,life:.2});
+  gunAmmo--;ammoEl.textContent=gunAmmo;gunFlash=.12;sfx('shoot');
+  status.textContent=gunAmmo<=0?'🔫 弾切れ！':'🔫 レーザー発射！ 残弾 '+gunAmmo+'発';
+  if(gunAmmo<=0){poopGun=false;gunhud.classList.add('hidden')}
+  setTimeout(()=>{if(status.textContent.startsWith('🔫 レーザー発射！'))status.textContent=''},350);
+}
+function pointToSegmentDistance(px,py,ax,ay,bx,by){
+  const dx=bx-ax,dy=by-ay,len2=dx*dx+dy*dy;
+  if(len2===0)return Math.hypot(px-ax,py-ay);
+  const u=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/len2));
+  return Math.hypot(px-(ax+u*dx),py-(ay+u*dy));
+}
+function update(dt){
+  t=(performance.now()-startTime)/1000;
+  // ドラッグ中だけ、固定速度で指の位置へ追従。
+  // 指を止めても勝手に加速せず、目標位置に着いたら止まる。
+  let sp=300;if(t<slow)sp*=.42;if(t<fast)sp*=1.75;
+  if(dragging && !(t<stun)){
+    const dx=dragTargetX-player.x;
+    const step=Math.min(Math.abs(dx),sp*dt);
+    if(Math.abs(dx)>0.5) player.x+=Math.sign(dx)*step;
+    else player.x=dragTargetX;
+  }
+  player.x=Math.max(17,Math.min(W-17,player.x));
+  player.y=ground()-player.h;
+
+  spawn-=dt;
+  if(spawn<=0){
+    spawnPoop();
+    if(t>25&&Math.random()<.22)spawnPoop();
+    spawn=Math.max(.22,1-t*.008)*(.65+Math.random()*.45);
+  }
+  itemSpawn-=dt;
+  if(itemSpawn<=0){
+    spawnItem();
+    const itemInterval=Math.max(1.5,5.2-t*.028);
+    itemSpawn=itemInterval+Math.random()*2.2;
+  }
+
+  for(let i=poop.length-1;i>=0;i--){
+    const p=poop[i];
+    p.y+=p.vy*(t<purpleBoost?1.5:1)*dt;p.rot+=dt*2;
+    if(hit(p)){
+      if(p.type==='orange'){
+        if(t>=inv){stun=Math.max(stun,t+1);status.textContent='😲 びっくり！ 1秒間硬直！';sfx('orange')}
+        poop.splice(i,1);continue;
+      }
+      if(p.type==='purple'){
+        if(t>=inv){purpleBoost=Math.max(purpleBoost,t+5);status.textContent='🟣 5秒間、うんちが1.5倍速！';sfx('purple')}
+        poop.splice(i,1);continue;
+      }
+      if(p.type==='ink'){
+        if(t>=inv){ink=Math.max(ink,t+5);status.textContent='🖋️ イカスミ！ 上半分が真っ黒！';sfx('ink')}
+        poop.splice(i,1);continue;
+      }
+      if(t>=inv){
+        const dmg=p.type==='gold'?20:p.type==='silver'?15:8;
+        if(paperHits>0){paperHits--;status.textContent='🧻 ダメージ無効！ 残り'+paperHits+'回';sfx('paper')}
+        else {HP=Math.max(0,HP-dmg); sfx(p.type); status.textContent=p.type==='green'?'🟢 3秒間スピードダウン！':'💥 HP -'+dmg;}
+        if(p.type==='green')slow=Math.max(slow,t+3);
+      }
+      poop.splice(i,1);continue;
+    }
+    if(p.y>H+60)poop.splice(i,1);
+  }
+
+  for(let i=items.length-1;i>=0;i--){
+    const a=items[i];
+    if(t<magnet){const dx=player.x-a.x,dy=(player.y+25)-a.y;const d=Math.hypot(dx,dy)||1;const pull=Math.min(420,2600/d);a.x+=dx/d*pull*dt;a.y+=dy/d*pull*dt;}
+    else a.y+=a.vy*dt;
+    if(hit(a)){
+      if(a.type==='heart'){HP+=10;status.textContent='❤️ HP +10';sfx('heart')}
+      if(a.type==='broken'){HP=Math.max(0,HP-5);status.textContent='💔 HP -5';sfx('broken')}
+      if(a.type==='plunger'){inv=Math.max(inv,t+10);status.textContent='🪠 10秒間 無敵！';sfx('plunger')}
+      if(a.type==='bigplunger'){inv=Math.max(inv,t+20);status.textContent='🪠✨ 20秒間 無敵！';sfx('bigplunger')}
+      if(a.type==='toilet'){poop=[];status.textContent='🚽 ジャーーーッ！ うんち全消去！';sfx('toilet')}
+      if(a.type==='slipper'){fast=Math.max(fast,t+5);status.textContent='🩴 5秒間 スピードアップ！';sfx('slipper')}
+      if(a.type==='bigheart'){HP+=20;status.textContent='💗 HP +20';sfx('bigheart')}
+      if(a.type==='brown'){HP=Math.max(0,Math.ceil(HP/2));status.textContent='💩 ドカーン！ HP半減！';sfx('brown')}
+      if(a.type==='gun'){poopGun=true;gunAmmo=10;ammoEl.textContent=gunAmmo;gunhud.classList.remove('hidden');status.textContent='🔫 うんち銃ゲット！ 全10発！';sfx('gun')}
+      setTimeout(()=>{status.textContent=''},1000);items.splice(i,1);continue;
+    }
+    if(a.y>H+60)items.splice(i,1);
+  }
+
+  for(let bi=bullets.length-1;bi>=0;bi--){
+    const b=bullets[bi];b.life-=dt;
+    for(let pi=poop.length-1;pi>=0;pi--){
+      const p=poop[pi],reach=Math.max(13,p.s*.62);
+      if(pointToSegmentDistance(p.x,p.y,b.x,b.y,b.tx,b.ty)<=reach)poop.splice(pi,1);
+    }
+    if(b.life<=0)bullets.splice(bi,1);
+  }
+  gunFlash=Math.max(0,gunFlash-dt);
+
+  timeEl.textContent=t.toFixed(2);hpEl.textContent=HP;hpfill.style.width=Math.min(100,HP)+'%';
+  if(HP<=0)end();
+}
+
+function cloud(cx,cy,s,night=false){
+  x.fillStyle=night?'rgba(225,235,255,.72)':'rgba(255,255,255,.95)';
+  x.beginPath();
+  x.arc(cx-30*s,cy+5*s,22*s,0,Math.PI*2);
+  x.arc(cx,cy-10*s,31*s,0,Math.PI*2);
+  x.arc(cx+31*s,cy+4*s,23*s,0,Math.PI*2);
+  x.roundRect(cx-48*s,cy+4*s,96*s,27*s,13*s);
+  x.fill();
+}
+function drawPoop(p){
+  x.save();x.translate(p.x,p.y);x.rotate(p.rot);
+  const s=p.s*1.18;
+  const col=p.type==='gold'?'#ffd22e':p.type==='green'?'#39b94a':p.type==='purple'?'#a96be8':p.type==='orange'?'#ff9f1c':p.type==='silver'?'#c8cdd3':p.type==='ink'?'#171717':p.type==='brown'?'#7a4525':'#f38ab5';
+  x.strokeStyle='#5b3420';x.lineWidth=Math.max(2,s*.08);x.lineJoin='round';x.fillStyle=col;
+  x.beginPath();
+  x.moveTo(-s*.78,s*.42);x.bezierCurveTo(-s*.92,s*.05,-s*.72,-s*.12,-s*.48,-s*.10);
+  x.bezierCurveTo(-s*.55,-s*.38,-s*.28,-s*.50,0,-s*.42);
+  x.bezierCurveTo(s*.28,-s*.50,s*.55,-s*.38,s*.48,-s*.10);
+  x.bezierCurveTo(s*.72,-s*.12,s*.92,s*.05,s*.78,s*.42);
+  x.bezierCurveTo(s*.45,s*.62,-s*.45,s*.62,-s*.78,s*.42);x.closePath();x.fill();x.stroke();
+  x.beginPath();x.moveTo(-s*.58,-s*.10);x.bezierCurveTo(-s*.72,-s*.30,-s*.55,-s*.52,-s*.28,-s*.48);
+  x.bezierCurveTo(-s*.30,-s*.70,-s*.12,-s*.82,0,-s*.76);
+  x.bezierCurveTo(s*.12,-s*.82,s*.30,-s*.70,s*.28,-s*.48);
+  x.bezierCurveTo(s*.55,-s*.52,s*.72,-s*.30,s*.58,-s*.10);
+  x.bezierCurveTo(s*.35,.03,-s*.35,.03,-s*.58,-s*.10);x.closePath();x.fill();x.stroke();
+  x.beginPath();x.moveTo(-s*.30,-s*.48);x.bezierCurveTo(-s*.38,-s*.64,-s*.25,-s*.82,-s*.08,-s*.80);
+  x.bezierCurveTo(-s*.16,-s*.98,s*.10,-s*1.05,s*.14,-s*.84);
+  x.bezierCurveTo(s*.34,-s*.78,s*.40,-s*.58,s*.30,-s*.48);
+  x.bezierCurveTo(s*.18,-s*.34,-s*.18,-s*.34,-s*.30,-s*.48);x.closePath();x.fill();x.stroke();
+  x.fillStyle='rgba(255,255,255,.45)';x.beginPath();x.ellipse(-s*.42,s*.17,s*.12,s*.07,-.3,0,7);x.fill();
+  x.restore();
+}
+function drawItem(a){
+  x.save();x.translate(a.x,a.y);x.textAlign='center';x.textBaseline='middle';
+  const big=['bigplunger','bigheart'].includes(a.type);
+  if(a.type==='brown'){
+    drawPoop({x:0,y:6,s:31,type:'brown',rot:0});
+  }else{
+    x.font=(big?'54':'46')+'px sans-serif';
+    const map={heart:'❤️',broken:'💔',plunger:'🪠',bigplunger:'🪠',toilet:'🚽',slipper:'🩴',bigheart:'💗',magnet:'🧲',paper:'🧻',gun:'🔫'};
+    x.fillText(map[a.type],0,0);
+  }
+  if(a.type==='bigplunger'){x.font='22px sans-serif';x.fillText('✨',31,-26)}
+  x.restore();
+}
+function drawSky(){
+  const phase=t%30;
+  let top,bottom,night=false;
+  if(phase<10){
+    const q=phase/10;top=lerpColor('#ffb56b','#67d4ff',q);bottom=lerpColor('#ffd8a0','#c5f1ff',q);
+  }else if(phase<20){
+    const q=(phase-10)/10;top=lerpColor('#67d4ff','#6bb7ef',q);bottom=lerpColor('#c5f1ff','#a5d6ef',q);
+  }else{
+    const q=(phase-20)/10;top=lerpColor('#263b78','#13204d',q);bottom=lerpColor('#6077a8','#1e315e',q);night=true;
+  }
+  const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,top);g.addColorStop(.72,bottom);g.addColorStop(.72,night?'#466b3e':'#8ed65e');g.addColorStop(1,night?'#355238':'#62b94a');
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  const a=phase<20;
+  if(a){
+    const sunX=W*(.12+.76*(phase/20)),sunY=H*(.20-.08*Math.sin(Math.PI*phase/20));
+    x.fillStyle='#ffd84d';x.beginPath();x.arc(sunX,sunY,Math.min(34,Math.max(22,W*.07)),0,Math.PI*2);x.fill();
+  }else{
+    const moonPhase=(phase-20)/10;
+    const moonX=W*(.82-.64*moonPhase),moonY=H*(.17+.10*Math.sin(Math.PI*moonPhase));
+    x.fillStyle='#fff7c7';x.beginPath();x.arc(moonX,moonY,30,0,Math.PI*2);x.fill();
+    x.fillStyle=top;x.beginPath();x.arc(moonX+11,moonY-6,28,0,Math.PI*2);x.fill();
+    for(let i=0;i<18;i++){const sx=(i*83+31)%W,sy=70+(i*47)%(Math.max(90,H*.45));x.fillStyle='rgba(255,255,220,.7)';x.fillRect(sx,sy,2,2)}
+  }
+  cloud(W*.13,100,1,night);cloud(W*.72,150,.8,night);cloud(W*.43,55,.55,night);
+}
+function draw(){
+  drawSky();
+  x.fillStyle=t%30>=20?'#416a3b':'#65bb4b';x.fillRect(0,ground(),W,H-ground());
+  poop.forEach(drawPoop);items.forEach(drawItem);
+  if(t<ink){x.fillStyle='rgba(0,0,0,.94)';x.fillRect(0,0,W,H*.5);}
+  bullets.forEach(b=>{x.strokeStyle='#ffe36b';x.lineWidth=4;x.beginPath();x.moveTo(b.x,b.y);x.lineTo(b.tx,b.ty);x.stroke()});
+  x.save();x.translate(player.x,player.y);
+  if(t<inv)x.globalAlpha=.35+Math.abs(Math.sin(t*12))*.65;
+  x.strokeStyle='#222';x.fillStyle='#222';x.lineWidth=5;x.lineCap='round';
+  x.beginPath();x.arc(0,10,11,0,Math.PI*2);x.fill();
+  x.beginPath();x.moveTo(0,21);x.lineTo(0,47);x.moveTo(0,27);x.lineTo(-14,38);x.moveTo(0,27);x.lineTo(14,38);x.moveTo(0,47);x.lineTo(-12,61);x.moveTo(0,47);x.lineTo(12,61);x.stroke();
+  if(poopGun){
+    x.strokeStyle='#333';x.lineWidth=4;x.beginPath();x.moveTo(10,29);x.lineTo(25,34);x.stroke();
+    x.fillStyle='#555';x.fillRect(20,31,14,5);x.fillRect(27,35,5,8);
+    if(gunFlash>0){x.fillStyle='#ffd23c';x.beginPath();x.arc(36,33,7+gunFlash*25,0,Math.PI*2);x.fill()}
+  }
+  if(t<stun){x.fillStyle='#222';x.font='900 26px sans-serif';x.textAlign='center';x.fillText('😲',0,-20);x.font='900 18px sans-serif';x.fillText('!!',24,-8)}
+  if(t<inv){x.strokeStyle='#39f';x.lineWidth=3;x.beginPath();x.arc(0,35,30+Math.sin(t*8)*3,0,Math.PI*2);x.stroke()}
+  x.restore();
+}
+function lerp(a,b,q){return a+(b-a)*q}
+function hexToRgb(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}
+function lerpColor(a,b,q){const A=hexToRgb(a),B=hexToRgb(b);return `rgb(${Math.round(lerp(A[0],B[0],q))},${Math.round(lerp(A[1],B[1],q))},${Math.round(lerp(A[2],B[2],q))})`}
+function loop(now){if(!playing)return;const dt=Math.min(.033,(now-last)/1000);last=now;update(dt);draw();if(playing)requestAnimationFrame(loop)}
+function end(){
+  playing=false;dragging=false;hud.classList.add('hidden');over.classList.remove('hidden');homeBgmStart();
+  final.textContent=t.toFixed(2)+'秒';
+  const wasTop=scores.length<3||t>scores[scores.length-1];
+  saveScore(t);renderScores();
+  record.textContent=wasTop?'🏆 BEST 3 にランクイン！':'BEST 3 を目指そう！';
+  sfx('over');
+}
+
+c.addEventListener('pointerdown',e=>{
+  if(!playing)return;
+  c.setPointerCapture?.(e.pointerId);
+  pointerActive=true;dragging=false;
+  dragStartX=e.clientX;dragStartPlayerX=player.x;dragTargetX=player.x;
+});
+c.addEventListener('pointermove',e=>{
+  if(!playing||!pointerActive)return;
+  const dx=e.clientX-dragStartX;
+  if(!dragging && Math.abs(dx)>8)dragging=true;
+  if(dragging)dragTargetX=Math.max(17,Math.min(W-17,dragStartPlayerX+dx));
+});
+c.addEventListener('pointerup',e=>{
+  if(!playing)return;
+  if(pointerActive && !dragging && poopGun)shootAt(e.clientX,e.clientY);
+  pointerActive=false;dragging=false;dragTargetX=player.x;
+});
+c.addEventListener('pointercancel',()=>{pointerActive=false;dragging=false;dragTargetX=player.x});
+document.addEventListener('touchmove',e=>{if(playing)e.preventDefault()},{passive:false});
+</script>
+</body>
+</html>
