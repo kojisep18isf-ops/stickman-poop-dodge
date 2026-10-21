@@ -21,7 +21,12 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 .homeBtn{background:#8ee4ff}
 .sound{margin-top:16px;background:#fff;color:#222;border:2px solid #222;border-radius:12px;padding:8px 14px;font-weight:800}
 .hidden{display:none!important}
-#hud{position:fixed;top:8px;left:8px;right:8px;z-index:4;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+#hud{position:fixed;top:8px;left:8px;right:8px;z-index:4;pointer-events:none}
+#timehud{position:fixed;left:8px;top:8px}
+#hphud{position:fixed;left:50%;top:48px;transform:translateX(-50%);min-width:150px}
+#itemshud{position:fixed;right:8px;top:8px;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+#itemshud .hudbox{min-width:112px}
+#status{top:108px}
 .hudbox{background:#fffffff0;border:2px solid #222;border-radius:12px;padding:6px 9px;font-weight:900;min-width:105px}
 #hpbar{height:13px;background:#ddd;border:2px solid #222;border-radius:10px;overflow:hidden;margin-top:3px}
 #hpfill{height:100%;width:100%;background:#45c95b}
@@ -56,9 +61,12 @@ button:active{transform:translateY(4px);box-shadow:0 1px #222}
 
 <div id="hud" class="hidden">
 <button id="pauseBtn" class="pauseBtn">⏸ 一時停止</button>
-<div class="hudbox">TIME<br><span id="time">0.00</span> 秒</div>
-<div class="hudbox">HP <span id="hp">100</span><div id="hpbar"><div id="hpfill"></div></div></div>
+<div id="timehud" class="hudbox">TIME<br><span id="time">0.00</span> 秒</div>
+<div id="hphud" class="hudbox">HP <span id="hp">100</span><div id="hpbar"><div id="hpfill"></div></div></div>
+<div id="itemshud">
 <div id="gunhud" class="hudbox hidden">🔫 <span id="ammo">10</span> / 10</div>
+<div id="paperhud" class="hudbox hidden">🧻 <span id="paperCount">5</span> / 5</div>
+</div>
 </div>
 <div id="status"></div>
 
@@ -129,7 +137,7 @@ const startBtn=$('startBtn'),retry=$('retry'),homeBtn=$('homeBtn'),sound=$('soun
 const help=$('help'),helpBtn=$('helpBtn'),closeHelp=$('closeHelp');
 const rankingPanel=$('rankingPanel'),allScoreList=$('allScoreList'),closeRanking=$('closeRanking'),scoreList=$('scoreList');
 const timeEl=$('time'),hpEl=$('hp'),hpfill=$('hpfill'),final=$('final'),record=$('record');
-const gunhud=$('gunhud'),ammoEl=$('ammo');
+const gunhud=$('gunhud'),ammoEl=$('ammo'),paperhud=$('paperhud'),paperCountEl=$('paperCount');
 const pauseBtn=$('pauseBtn'),pausePanel=$('pausePanel'),resumeBtn=$('resumeBtn'),pauseHomeBtn=$('pauseHomeBtn');
 
 let W=innerWidth,H=innerHeight,D=1;
@@ -219,7 +227,7 @@ function startGame(){
   stopHomeBgm();
   start.classList.add('hidden');over.classList.add('hidden');rankingPanel.classList.add('hidden');pausePanel.classList.add('hidden');hud.classList.remove('hidden');
   playing=true;paused=false;backgroundPaused=false;HP=100;t=0;poop=[];items=[];bullets=[];
-  inv=slow=fast=purpleBoost=stun=ink=magnet=0;paperHits=0;poopGun=false;gunAmmo=0;gunFlash=0;spawn=0;itemSpawn=1.5;gunhud.classList.add('hidden');ammoEl.textContent='10';
+  inv=slow=fast=purpleBoost=stun=ink=magnet=0;paperHits=0;poopGun=false;gunAmmo=0;gunFlash=0;spawn=0;itemSpawn=1.5;gunhud.classList.add('hidden');paperhud.classList.add('hidden');ammoEl.textContent='10';paperCountEl.textContent='5';
   reset();last=performance.now();status.textContent='';pausePanel.classList.add('hidden');
   audioStart();requestAnimationFrame(loop);
 }
@@ -354,6 +362,8 @@ function update(dt){
           const damageType=(p.type==='pink'||p.type==='gold'||p.type==='silver');
           if(damageType && paperHits>0){
             paperHits--;
+            paperCountEl.textContent=paperHits;
+            if(paperHits<=0)paperhud.classList.add('hidden');
             status.textContent='🧻 ダメージ無効！ 残り'+paperHits+'回';
             sfx('paper');
           }else{
@@ -371,7 +381,8 @@ function update(dt){
   for(let i=items.length-1;i>=0;i--){
     const a=items[i];
     a.y+=a.vy*dt;
-    if(t<magnet){const dx=player.x-a.x,dy=(player.y+25)-a.y,d=Math.hypot(dx,dy)||1;const pull=Math.min(700*dt,d);a.x+=dx/d*pull;a.y+=dy/d*pull;}
+    const magnetTarget=['heart','plunger','bigplunger','toilet','slipper','bigheart','magnet','paper','gun'].includes(a.type);
+    if(t<magnet && magnetTarget){const dx=player.x-a.x,dy=(player.y+25)-a.y,d=Math.hypot(dx,dy)||1;const pull=Math.min(700*dt,d);a.x+=dx/d*pull;a.y+=dy/d*pull;}
     if(hit(a)){
       if(a.type==='heart'){HP+=10;status.textContent='❤️ HP +10';sfx('heart')}
       if(a.type==='broken'){HP=Math.max(0,HP-5);status.textContent='💔 HP -5';sfx('broken')}
@@ -382,7 +393,7 @@ function update(dt){
       if(a.type==='bigheart'){HP+=20;status.textContent='💗 HP +20';sfx('bigheart')}
       if(a.type==='brown'){HP=Math.max(0,Math.ceil(HP/2));status.textContent='💩 ドカーン！ HP半減！';sfx('brown')}
       if(a.type==='magnet'){magnet=Math.max(magnet,t+3);status.textContent='🧲 3秒間 マグネット！';sfx('magnet')}
-      if(a.type==='paper'){paperHits=5;status.textContent='🧻 トイレットペーパー！ 5回ダメージ無効';sfx('paper')}
+      if(a.type==='paper'){paperHits=5;paperCountEl.textContent=paperHits;paperhud.classList.remove('hidden');status.textContent='🧻 トイレットペーパー！ 5回ダメージ無効';sfx('paper')}
       if(a.type==='gun'){poopGun=true;gunAmmo=10;ammoEl.textContent=gunAmmo;gunhud.classList.remove('hidden');status.textContent='🔫 レーザー銃ゲット！ 全10発！';sfx('gun')}
       setTimeout(()=>{status.textContent=''},1000);items.splice(i,1);continue;
     }
